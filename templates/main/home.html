@@ -9,16 +9,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Clock Component -->
-<div class="clock-component">
-    <div class="clock-container">
-        <div class="time-wrapper">
-            <span id="time" class="digital-clock">00:00:00</span>
-            <span id="date" class="digital-date">Loading...</span>
-            <div class="clock-indicator"></div>
-        </div>
-    </div>
-</div>
 
 <!-- Hero Section -->
 <div class="hero-section">
@@ -233,27 +223,6 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Clock functionality
-    function updateClock() {
-        const timeElement = document.getElementById('time');
-        const dateElement = document.getElementById('date');
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const day = days[now.getDay()];
-        const date = now.toLocaleDateString();
-        const timeString = `${hours}:${minutes}:${seconds}`;
-        const dateString = `${day}, ${date}`;
-        timeElement.textContent = timeString;
-        dateElement.textContent = dateString;
-    }
-
-    setInterval(updateClock, 1000);
-    updateClock();
-
     // Banner dots functionality
     const dots = document.querySelectorAll('.banner-dot');
     dots.forEach((dot, index) => {
@@ -262,7 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.classList.add('active');
         });
     });
-});
 </script>
 =======
 {% extends "base.html" %}
@@ -275,17 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 {% block content %}
-<!-- Clock Component -->
-<div class="clock-component">
-    <div class="clock-container">
-        <div class="time-wrapper">
-            <span id="time" class="digital-clock">00:00:00</span>
-            <span id="date" class="digital-date">Loading...</span>
-            <div class="clock-indicator"></div>
-        </div>
-    </div>
-</div>
-
 <!-- Hero Section -->
 <div class="hero-section">
     <div class="hero-content">
