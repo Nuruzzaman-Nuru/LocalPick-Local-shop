@@ -169,6 +169,14 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
   4. Push to the branch
   5. Create a Pull Request
 
-  ## License
+
 
   This project is licensed under the MIT License.
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of this project,  
+as long as you include the above copyright notice and this permission notice in all copies or substantial portions of the software.
+
+**Disclaimer:** This software is provided "as is", without warranty of any kind. The author shall not be held liable for any damages arising from the use of this software.
