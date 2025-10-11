@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to QuickShop{% endblock %}
+
+{% block styles %}
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- Clock Component -->
+<div class="clock-component">
+    <div class="clock-container">
+        <div class="time-wrapper">
+            <span id="time" class="digital-clock">00:00:00</span>
+            <span id="date" class="digital-date">Loading...</span>
+            <div class="clock-indicator"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="container">
+            <div class="text-center">
+                <h1 class="hero-title">Discover Amazing Deals</h1>
+                <p class="hero-subtitle">Shop Smarter, Save Better</p>
+                    
+                    <!-- Search Section -->
+                    <div class="search-wrapper">
+                        <div class="search-tabs">
+                            <button type="button" class="search-tab active" data-search-type="all">
+                                <i class="bi bi-search"></i> All
+                            </button>
+                            <button type="button" class="search-tab" data-search-type="products">
+                                <i class="bi bi-box-seam"></i> Products
+                            </button>
+                            <button type="button" class="search-tab" data-search-type="shops">
+                                <i class="bi bi-shop"></i> Shops
+                            </button>
+                        </div>
+                        
+                        <form class="search-form" action="{{ url_for('main.search') }}" method="GET">
+                            <div class="input-group">
+                                <input type="text" class="form-control search-input" 
+                                       placeholder="Search for products, shops, or locations..." 
+                                       name="q" required>
+                                <input type="hidden" name="type" id="searchType" value="all">
+                                <button class="btn btn-primary search-btn" type="submit">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
+                            <div class="search-filters">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" id="useLocation">
+                                    <i class="bi bi-geo-alt"></i> Use my location
+                                </label>
+                            </div>
+                        </form>
+                        
+                        <div class="popular-searches">
+                            <a href="{{ url_for('main.search', q='Electronics') }}">Electronics</a>
+                            <a href="{{ url_for('main.search', q='Fashion') }}">Fashion</a>
+                            <a href="{{ url_for('main.search', q='Groceries') }}">Groceries</a>
+                            <a href="{{ url_for('main.search', q='Local Shops') }}">Local Shops</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image">
+                        <img src="{{ url_for('static', filename='images/hero-banner.jpg') }}" alt="Shopping Experience">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcement Bar -->
+<div class="announcement-bar">
+    <div class="announcement-content">
+        <div class="announcement-slider">
+            <div class="announcement-item">
+                <i class="bi bi-fire"></i> Hot Deal! Up to 40% OFF on selected items
+            </div>
+            <div class="announcement-item">
+                <i class="bi bi-truck"></i> Free delivery on orders over ৳1000
+            </div>
+            <div class="announcement-item">
+                <i class="bi bi-gift"></i> New users get extra 10% OFF
+            </div>
+        </div>
+    </div>
+</div>
+        
+        <!-- Adding prominent search box -->
+        <div class="col-md-8 mx-auto mt-4">
+            {% with search_type='all' %}
+            {% include 'includes/search_box.html' %}
+            {% endwith %}
+        </div>
+        
+        <a href="{{ url_for('shop.index') }}" class="btn btn-light btn-lg mt-3">Shop Now</a>
+    </div>
+    <div class="banner-dots">
+        <span class="banner-dot active"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title text-center">Why Choose QuickShop?</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <h3>Local Shop Discovery</h3>
+                    <p>Find the best local shops near you with real-time inventory tracking</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <h3>Smart Negotiation</h3>
+                    <p>AI-Powered price negotiation for the best deals</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <h3>Fast Delivery</h3>
+                    <p>Express delivery within 24 hours to your doorstep</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3>Secure Shopping</h3>
+                    <p>100% secure payments and buyer protection</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="featured-products">
+    <div class="container">
+        <h2 class="section-title text-center">Featured Products</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="product-card">
+                    <span class="stock-badge in-stock">In Stock</span>
+                    <img src="{{ url_for('static', filename='images/smart-watch.jpg') }}" alt="Smart Watch Pro" class="product-image">
+                    <div class="product-details">
+                        <h3>Smart Watch Pro</h3>
+                        <p>Experience premium quality and style</p>
+                        <div class="product-price">$299.99</div>
+                        <button class="btn btn-primary w-100">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="product-card">
+                    <span class="stock-badge in-stock">In Stock</span>
+                    <img src="{{ url_for('static', filename='images/airpods.jpg') }}" alt="Wireless Earbuds" class="product-image">
+                    <div class="product-details">
+                        <h3>Wireless Earbuds</h3>
+                        <p>Experience premium sound quality</p>
+                        <div class="product-price">$149.99</div>
+                        <button class="btn btn-primary w-100">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="product-card">
+                    <span class="stock-badge out-of-stock">Out of Stock</span>
+                    <img src="{{ url_for('static', filename='images/backpack.jpg') }}" alt="Premium Backpack" class="product-image">
+                    <div class="product-details">
+                        <h3>Premium Backpack</h3>
+                        <p>Experience premium quality and style</p>
+                        <div class="product-price">$89.99</div>
+                        <button class="btn btn-secondary w-100" disabled>Out of Stock</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="product-card">
+                    <span class="stock-badge in-stock">In Stock</span>
+                    <img src="{{ url_for('static', filename='images/sunglasses.jpg') }}" alt="Designer Sunglasses" class="product-image">
+                    <div class="product-details">
+                        <h3>Designer Sunglasses</h3>
+                        <p>Experience premium quality and style</p>
+                        <div class="product-price">$199.99</div>
+                        <button class="btn btn-primary w-100">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4">Ready to Start Shopping?</h2>
+                <p class="lead mb-4">Join thousands of happy customers who are already saving time and money with QuickShop.</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create Account</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% include 'includes/footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clock functionality
+    function updateClock() {
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const day = days[now.getDay()];
+        const date = now.toLocaleDateString();
+        const timeString = `${hours}:${minutes}:${seconds}`;
+        const dateString = `${day}, ${date}`;
+        timeElement.textContent = timeString;
+        dateElement.textContent = dateString;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Banner dots functionality
+    const dots = document.querySelectorAll('.banner-dot');
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            dots.forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}

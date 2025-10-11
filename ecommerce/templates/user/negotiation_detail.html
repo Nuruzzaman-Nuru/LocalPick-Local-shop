@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Negotiation Details{% endblock %}
+
+{% block styles %}
+<style>
+    @media print {
+        /* Hide non-printable elements */
+        .no-print, .no-print * {
+            display: none !important;
+        }
+        
+        /* Remove background colors and adjust text for better printing */
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+        
+        .badge {
+            border: 1px solid #000 !important;
+            color: #000 !important;
+            background: none !important;
+        }
+        
+        /* Ensure all content is visible */
+        .container {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        /* Add page break rules */
+        .negotiation-history {
+            page-break-before: auto;
+        }
+        
+        /* Improve text contrast */
+        body {
+            color: #000 !important;
+            background: #fff !important;
+        }
+        
+        /* Format timestamps for print */
+        small {
+            color: #666 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('user.negotiations') }}" class="btn btn-outline-secondary no-print">
+            <i class="bi bi-arrow-left"></i> Back to Negotiations
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-primary no-print">
+            <i class="bi bi-printer"></i> Print Negotiation Details
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Negotiation #{{ negotiation.id }}</h3>
+                <span class="badge bg-{{ {
+                    'pending': 'warning',
+                    'counter_offer': 'info',
+                    'accepted': 'success',
+                    'rejected': 'danger'
+                }[negotiation.status] }}">{{ negotiation.status|title }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Product Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4>Product Details</h4>
+                    <dl class="row">
+                        <dt class="col-sm-4">Product Name:</dt>
+                        <dd class="col-sm-8">{{ negotiation.product.name }}</dd>
+                        
+                        <dt class="col-sm-4">Shop:</dt>
+                        <dd class="col-sm-8">{{ negotiation.product.shop.name }}</dd>
+                        
+                        <dt class="col-sm-4">Original Price:</dt>
+                        <dd class="col-sm-8">৳{{ "%.2f"|format(negotiation.initial_price) }}</dd>
+                        
+                        {% if negotiation.product.min_price %}
+                        <dt class="col-sm-4">Minimum Price:</dt>
+                        <dd class="col-sm-8">৳{{ "%.2f"|format(negotiation.product.min_price) }}</dd>
+                        {% endif %}
+                        
+                        {% if negotiation.final_price %}
+                        <dt class="col-sm-4">Final Price:</dt>
+                        <dd class="col-sm-8">৳{{ "%.2f"|format(negotiation.final_price) }}
+                            ({{ ((1 - negotiation.final_price / negotiation.initial_price) * 100)|round(1) }}% discount)</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h4>Negotiation Status</h4>
+                    <dl class="row">
+                        <dt class="col-sm-4">Started:</dt>
+                        <dd class="col-sm-8">{{ negotiation.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        
+                        <dt class="col-sm-4">Last Updated:</dt>
+                        <dd class="col-sm-8">{{ negotiation.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        
+                        <dt class="col-sm-4">Rounds:</dt>
+                        <dd class="col-sm-8">{{ negotiation.rounds }}</dd>
+                        
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ {
+                                'pending': 'warning',
+                                'counter_offer': 'info',
+                                'accepted': 'success',
+                                'rejected': 'danger'
+                            }[negotiation.status] }}">{{ negotiation.status|title }}</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Negotiation History -->
+            <div class="negotiation-history mb-4">
+                <h4>Negotiation History</h4>
+                <div class="list-group">
+                    <!-- Initial Price -->
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-1">Original Price</h6>
+                                <p class="mb-1">৳{{ "%.2f"|format(negotiation.initial_price) }}</p>
+                            </div>
+                            <small>{{ negotiation.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Your First Offer -->
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-1">Your Initial Offer</h6>
+                                <p class="mb-1">৳{{ "%.2f"|format(negotiation.offered_price) }}</p>
+                                <small class="text-muted">
+                                    Requested {{ ((1 - negotiation.offered_price / negotiation.initial_price) * 100)|round(1) }}% discount
+                                </small>
+                            </div>
+                            <small>{{ negotiation.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+
+                    {% if negotiation.counter_price %}
+                    <!-- Counter Offer -->
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-1">Counter Offer</h6>
+                                <p class="mb-1">৳{{ "%.2f"|format(negotiation.counter_price) }}</p>
+                                <small class="text-muted">
+                                    Offered {{ ((1 - negotiation.counter_price / negotiation.initial_price) * 100)|round(1) }}% discount
+                                </small>
+                            </div>
+                            <small>{{ negotiation.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if negotiation.final_price %}
+                    <!-- Final Price -->
+                    <div class="list-group-item list-group-item-success">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-1">Final Agreed Price</h6>
+                                <p class="mb-1">৳{{ "%.2f"|format(negotiation.final_price) }}</p>
+                                <small>
+                                    Final discount: {{ ((1 - negotiation.final_price / negotiation.initial_price) * 100)|round(1) }}%
+                                </small>
+                            </div>
+                            <small>{{ negotiation.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            {% if negotiation.status in ['pending', 'counter_offer'] %}
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <form id="counterOfferForm" action="{{ url_for('api.negotiate_price', product_id=negotiation.product_id) }}" method="POST" class="d-flex gap-2">
+                            <input type="number" 
+                                   class="form-control" 
+                                   name="offered_price" 
+                                   step="0.01" 
+                                   min="{{ negotiation.product.min_price }}" 
+                                   max="{{ negotiation.initial_price }}"
+                                   placeholder="Enter your offer"
+                                   required>
+                            <button type="submit" class="btn btn-primary">Make Counter Offer</button>
+                        </form>
+                    </div>
+                    {% if negotiation.counter_price %}
+                    <div class="col-md-6 text-end">
+                        <form id="acceptOfferForm" action="{{ url_for('api.accept_negotiation', negotiation_id=negotiation.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success">Accept Counter Offer</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle counter offer form submission
+    const counterOfferForm = document.getElementById('counterOfferForm');
+    if (counterOfferForm) {
+        counterOfferForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const offeredPrice = parseFloat(this.querySelector('input[name="offered_price"]').value);
+            const submitButton = this.querySelector('button[type="submit"]');
+            
+            submitButton.disabled = true;
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    offered_price: offeredPrice
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload page to show updated negotiation
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error processing negotiation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing negotiation');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+            });
+        });
+    }
+
+    // Handle accept offer form submission
+    const acceptOfferForm = document.getElementById('acceptOfferForm');
+    if (acceptOfferForm) {
+        acceptOfferForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitButton = this.querySelector('button[type="submit"]');
+            
+            submitButton.disabled = true;
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message and redirect
+                    alert('Negotiation accepted successfully! Item added to cart.');
+                    window.location.href = "{{ url_for('main.cart') }}";
+                } else {
+                    alert(data.message || 'Error accepting negotiation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error accepting negotiation');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

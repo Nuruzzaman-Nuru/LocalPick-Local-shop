@@ -1,0 +1,208 @@
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #6a1b9a, #4a148c);
+    padding: 80px 0;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #fff, #e1bee7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+/* Search Section */
+.search-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.search-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-tab {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-tab i {
+    font-size: 1.1rem;
+}
+
+.search-tab.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.search-tab:hover {
+    color: white;
+    transform: translateY(-1px);
+}
+
+.search-input {
+    height: 60px;
+    font-size: 1.1rem;
+    padding-left: 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px 0 0 12px;
+}
+
+.search-btn {
+    padding: 0 2rem;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #8e24aa, #6a1b9a);
+    border: none;
+    border-radius: 0 12px 12px 0;
+}
+
+/* Features Section */
+.features-container {
+    background: linear-gradient(135deg, #f6f9fc 0%, #f1f4f8 100%);
+    padding: 4rem 0;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-icon i {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #8e24aa, #6a1b9a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Announcement Bar */
+.announcement-bar {
+    background: #8e24aa;
+    color: white;
+    padding: 10px 0;
+    overflow: hidden;
+}
+
+.announcement-slider {
+    display: flex;
+    animation: slide 20s linear infinite;
+}
+
+.announcement-item {
+    flex: 0 0 auto;
+    padding: 0 20px;
+    white-space: nowrap;
+}
+
+@keyframes slide {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Clock Component */
+.clock-component {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.clock-container {
+    background: rgba(14, 14, 22, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.digital-clock {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.25rem;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+.digital-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-image {
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-wrapper {
+        padding: 1.5rem;
+    }
+    
+    .search-tabs {
+        gap: 0.5rem;
+    }
+    
+    .search-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .feature-card {
+        margin-bottom: 1rem;
+    }
+    
+    .clock-container {
+        display: none;
+    }
+}

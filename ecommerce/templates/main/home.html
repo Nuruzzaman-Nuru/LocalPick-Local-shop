@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<!-- Clock Component -->
+<div class="clock-container">
+    <span id="time"></span>
+    <span id="date"></span>
+</div>
+
+<!-- Banner Section -->
+<div class="banner-section">
+    <div class="banner-content">
+        <h1 class="banner-title">Welcome to our QuickShop</h1>
+        <div class="banner-subtitle">UP to 40% OFF</div>
+        <p>Up to 40% OFF - Best Deals Online on some Products</p>
+        
+        <!-- Adding prominent search box -->
+        <div class="col-md-8 mx-auto mt-4">
+            {% with search_type='all' %}
+            {% include 'includes/search_box.html' %}
+            {% endwith %}
+        </div>
+        
+        <a href="{{ url_for('shop.index') }}" class="btn btn-light btn-lg mt-3">Shop Now</a>
+    </div>
+    <div class="banner-dots">
+        <span class="banner-dot active"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+        <span class="banner-dot"></span>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="features py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose QuickShop?</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shop display-4 text-primary mb-3"></i>
+                        <h3 class="h4">Local Shop Discovery</h3>
+                        <p class="text-muted">Find the best local shops near you with real-time inventory.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-tags display-4 text-primary mb-3"></i>
+                        <h3 class="h4">Negotiation</h3>
+                        <p class="text-muted">AI-Powered Bot for Price Negotiation</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-truck display-4 text-primary mb-3"></i>
+                        <h3 class="h4">Quick Delivery</h3>
+                        <p class="text-muted">Get your purchases delivered fast and track them in real-time.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear display-4 text-primary mb-3"></i>
+                        <h3 class="h4">Shop Management</h3>
+                        <p class="text-muted">Easily manage your shop, products, and orders with our powerful tools.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4">Ready to Start Shopping?</h2>
+                <p class="lead mb-4">Join thousands of happy customers who are already saving time and money with QuickShop.</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create Account</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Featured Products Section -->
+<section class="featured-products py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">📸 Featured Products</h2>
+        <div class="product-grid">
+            {% for product in featured_products %}
+            <div class="product-card">
+                {% if product.image_url %}
+                    <img src="{{ url_for('static', filename='images/products/' + product.image_url) }}"
+                         alt="{{ product.name }}"
+                         class="card-img-top">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/payment.jpg') }}"
+                         alt="{{ product.name }}"
+                         class="card-img-top">
+                {% endif %}
+                <div class="product-info">
+                    {% if product.category %}
+                        <p>{{ product.category.upper() }}</p>
+                    {% endif %}
+                    <h4>{{ product.name }}</h4>
+                    <p class="price">৳{{ "%.2f"|format(product.price) }}</p>                    <p class="rating">
+                        {% set rating = product.rating|default(0)|int %}
+                        {{ '★' * rating }}{{ '☆' * (5 - rating) }}
+                        ({{ product.rating_count|default(0) }})
+                    </p>
+                </div>
+                <div class="buttons">                    <a href="{{ url_for('shop.product', shop_id=product.shop.id, product_id=product.id) }}" 
+                       class="details-btn">View Details</a>
+                    {% if product.stock > 0 %}
+                        {% if current_user.is_authenticated %}
+                            <button class="cart-btn" 
+                                    onclick="addToCart('{{ product.id }}', '{{ product.name }}')"
+                                    {% if not product.stock %}disabled{% endif %}>
+                                Add to Cart
+                            </button>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="cart-btn">Login to Buy</a>
+                        {% endif %}
+                    {% else %}
+                        <button class="cart-btn" disabled>Out of Stock</button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No featured products available at this time.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+.product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.product-card {
+    background: #fff;
+    border-radius: 12px;
+    width: 250px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.product-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-info h4 {
+    margin: 5px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.product-info p {
+    margin: 4px 0;
+    color: #666;
+}
+
+.price {
+    font-size: 20px;
+    color: #8e24aa;
+    font-weight: bold;
+}
+
+.rating {
+    color: #fbc02d;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px 15px;
+    margin-top: auto;
+}
+
+.buttons a,
+.buttons button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.details-btn {
+    background: white;
+    border: 2px solid #8e24aa;
+    color: #8e24aa;
+}
+
+.details-btn:hover {
+    background: #8e24aa;
+    color: white;
+}
+
+.cart-btn {
+    background: #8e24aa;
+    color: white;
+    border: none;
+}
+
+.cart-btn:hover:not([disabled]) {
+    background: #6a1b9a;
+}
+
+.cart-btn[disabled] {
+    background: #ccc;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+function addToCart(productId, productName) {
+    fetch('/api/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showSuccessMessage(`${productName} added to cart!`);
+            updateCartCount();
+        } else {
+            throw new Error(data.message || 'Error adding item to cart');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorMessage(error.message || 'Error adding item to cart');
+    });
+}
+</script>
+
+{% include 'includes/footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clock functionality
+    function updateClock() {
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const day = days[now.getDay()];
+        const date = now.toLocaleDateString();
+        const timeString = `${hours}:${minutes}:${seconds}`;
+        const dateString = `${day}, ${date}`;
+        timeElement.textContent = timeString;
+        dateElement.textContent = dateString;
+    }
+
+    setInterval(updateClock, 1000);F
+    updateClock();
+
+    // Banner dots functionality
+    const dots = document.querySelectorAll('.banner-dot');
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            dots.forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}
