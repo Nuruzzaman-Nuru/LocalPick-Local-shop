@@ -3,11 +3,7 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-<!-- Clock Component -->
-<div class="clock-container">
-    <span id="time"></span>
-    <span id="date"></span>
-</div>
+
 
 <!-- Banner Section -->
 <div class="banner-section">
@@ -281,27 +277,6 @@ function addToCart(productId, productName) {
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Clock functionality
-    function updateClock() {
-        const timeElement = document.getElementById('time');
-        const dateElement = document.getElementById('date');
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const day = days[now.getDay()];
-        const date = now.toLocaleDateString();
-        const timeString = `${hours}:${minutes}:${seconds}`;
-        const dateString = `${day}, ${date}`;
-        timeElement.textContent = timeString;
-        dateElement.textContent = dateString;
-    }
-
-    setInterval(updateClock, 1000);F
-    updateClock();
-
     // Banner dots functionality
     const dots = document.querySelectorAll('.banner-dot');
     dots.forEach((dot, index) => {
@@ -310,6 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.classList.add('active');
         });
     });
-});
+
 </script>
 {% endblock %}
