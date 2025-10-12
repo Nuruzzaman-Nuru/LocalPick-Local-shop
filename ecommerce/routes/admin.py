@@ -37,6 +37,7 @@ def dashboard():    # Calculate dashboard statistics
         'active_shops': Shop.query.filter_by(is_active=True).count(),
         'total_delivery': User.query.filter_by(role='delivery').count(),
         'pending_orders': Order.query.filter_by(status='pending').count(),
+        'confirmed_orders': Order.query.filter_by(confirmed=True).count(),
         'daily_revenue': Order.query.filter(
             Order.status == 'completed',
             func.date(Order.created_at) == func.date(func.now())
@@ -178,8 +179,9 @@ def confirm_order(order_id):
         }), 400
         
     try:
-        # Update order status to confirmed
+        # Update order status and confirmation
         order.status = 'confirmed'
+        order.confirmed = True
         db.session.commit()
         
         # Send SMS to customer if phone number is available

@@ -12,17 +12,17 @@
 
 <div class="row mb-4">
     <div class="col-md-12">
-        <div class="btn-group" role="group">
+            <div class="btn-group" role="group">
             <a href="{{ url_for('admin.orders', status='pending') }}" 
                class="btn btn-{{ 'primary' if request.args.get('status') == 'pending' else 'outline-primary' }}">
                 Pending
             </a>
-            <a href="{{ url_for('admin.orders', status='in_delivery') }}" 
-               class="btn btn-{{ 'primary' if request.args.get('status') == 'in_delivery' else 'outline-primary' }}">
+            <a href="{{ url_for('admin.orders', status='delivering') }}" 
+               class="btn btn-{{ 'primary' if request.args.get('status') == 'delivering' else 'outline-primary' }}">
                 In Delivery
             </a>
-            <a href="{{ url_for('admin.orders', status='delivered') }}" 
-               class="btn btn-{{ 'primary' if request.args.get('status') == 'delivered' else 'outline-primary' }}">
+            <a href="{{ url_for('admin.orders', status='completed') }}" 
+               class="btn btn-{{ 'primary' if request.args.get('status') == 'completed' else 'outline-primary' }}">
                 Delivered
             </a>
             <a href="{{ url_for('admin.orders') }}" 
@@ -47,6 +47,7 @@
                                     <th>Shop</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Confirmed</th>
                                     <th>Delivery Person</th>
                                     <th>Created At</th>
                                     <th>Actions</th>
@@ -60,21 +61,22 @@
                                         <td>{{ order.shop.name }}</td>
                                         <td>${{ "%.2f"|format(order.total_amount) }}</td>
                                         <td>
-                                            <span class="badge bg-{{ 'primary' if order.status == 'pending' 
-                                                                else 'info' if order.status == 'in_delivery' 
-                                                                else 'success' if order.status == 'delivered'
-                                                                else 'secondary' }}">
+                                            <span class="badge bg-{{ order_status_colors.get(order.status, 'secondary') }}">
                                                 {{ order.status|replace('_', ' ')|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if order.confirmed else 'warning' }}">
+                                                {{ 'Confirmed' if order.confirmed else 'Not Confirmed' }}
                                             </span>
                                         </td>
                                         <td>
                                             {% if order.delivery_person %}
                                                 {{ order.delivery_person.username }}
-                                            {% elif order.status == 'pending' %}
-                                                <button class="btn btn-sm btn-primary assign-delivery"
-                                                        data-order-id="{{ order.id }}">
+                                            {% elif order.confirmed and order.status != 'cancelled' %}
+                                                <a href="{{ url_for('admin.order_details', order_id=order.id) }}" class="btn btn-sm btn-primary">
                                                     Assign Delivery
-                                                </button>
+                                                </a>
                                             {% else %}
                                                 -
                                             {% endif %}
@@ -86,7 +88,7 @@
                                                         data-order-id="{{ order.id }}">
                                                     Details
                                                 </button>
-                                                {% if order.status == 'pending' %}
+                                                {% if order.status == 'pending' and not order.confirmed %}
                                                     <button type="button" class="btn btn-sm btn-success confirm-order"
                                                             data-order-id="{{ order.id }}">
                                                         Confirm Order
@@ -96,7 +98,7 @@
                                                         Cancel Order
                                                     </button>
                                                 {% endif %}
-                                                {% if order.status == 'in_delivery' %}
+                                                {% if order.status == 'delivering' %}
                                                     <button type="button" class="btn btn-sm btn-success track-delivery"
                                                             data-order-id="{{ order.id }}">
                                                         Track
@@ -148,15 +150,17 @@ function updateOrderStatus(orderId, status) {
             badge.className = `badge bg-${
                 status === 'confirmed' ? 'info' : 
                 status === 'cancelled' ? 'danger' : 
-                status === 'delivered' ? 'success' : 
-                'primary'
+                status === 'completed' || status === 'delivered' ? 'success' : 
+                status === 'delivering' ? 'primary' :
+                status === 'pending' ? 'warning' :
+                'secondary'
             }`;
             badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
         }
     }
-
-    // Update delivery person cell
-    const deliveryCell = row.querySelector('td:nth-child(6)');
+    // Update confirmed and delivery person cells
+    const confirmedCell = row.querySelector('td:nth-child(6)');
+    const deliveryCell = row.querySelector('td:nth-child(7)');
     if (deliveryCell) {
         deliveryCell.innerHTML = '-';
     }

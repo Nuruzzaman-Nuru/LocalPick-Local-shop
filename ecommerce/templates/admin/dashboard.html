@@ -63,6 +63,14 @@
             </div>
         </div>
         <div class="col-md-3">
+            <div class="card bg-success text-white">                <div class="card-body">
+                    <h5 class="card-title">Total Confirmed Orders</h5>
+                    <p class="display-4">{{ stats.confirmed_orders }}</p>
+                    <a href="{{ url_for('admin.orders', status='confirmed') }}" class="btn btn-light">View All</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Daily Revenue</h5>

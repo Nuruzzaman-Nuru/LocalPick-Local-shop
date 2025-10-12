@@ -7,6 +7,7 @@ class Order(db.Model):
     shop_id = db.Column(db.Integer, db.ForeignKey('shop.id'), nullable=False)
     delivery_person_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     status = db.Column(db.String(20), nullable=False, default='pending')
+    confirmed = db.Column(db.Boolean, default=False)  # New column to track confirmation
     total_amount = db.Column(db.Float, nullable=False, default=0.0)
     delivery_fee = db.Column(db.Float, nullable=False, default=5.0)  # Default delivery fee
     delivery_address = db.Column(db.String(200), nullable=True)  # Made nullable
@@ -42,8 +43,7 @@ class Order(db.Model):
         """Update order status with proper validation and side effects"""
         valid_transitions = {
             'pending': ['confirmed', 'cancelled'],
-            'confirmed': ['ready_for_delivery', 'cancelled'],
-            'ready_for_delivery': ['delivering', 'cancelled'],
+            'confirmed': ['delivering', 'cancelled'],
             'delivering': ['completed', 'cancelled'],
             'completed': [],  # Final state
             'cancelled': []   # Final state
