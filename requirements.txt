@@ -9,8 +9,8 @@ Werkzeug==3.0.1
 python-dotenv==1.0.0
 email-validator==2.1.0.post1
 Pillow==9.5.0
-python-magic==0.4.27
-psycopg2-binary==2.9.9
+python-magic-bin==0.4.27
+psycopg2-binary==2.9.8
 gunicorn==21.2.0
 sentry-sdk[flask]==1.39.1
 redis==5.0.1
