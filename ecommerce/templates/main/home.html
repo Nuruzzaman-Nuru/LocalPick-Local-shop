@@ -476,7 +476,7 @@ function addToCart(productId, productName) {
     position: relative; 
     overflow: hidden; 
     width: 100vw;
-    min-height: 80vh;
+    min-height: 100vh; /* Increased height */
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
 }
@@ -484,13 +484,6 @@ function addToCart(productId, productName) {
     position: absolute; 
     inset: 0; 
     z-index: 0; 
-}
-.banner-bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.7));
-    z-index: 1;
 }
 .banner-bg .bg-slide { 
     position: absolute; 
@@ -557,10 +550,10 @@ function addToCart(productId, productName) {
 // Rotating banner backgrounds: four online images auto-rotate
 (function() {
     const images = [
-        'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1542736667-069246bdbc5a?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1503602642458-232111445657?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1600&auto=format&fit=crop&q=80', // Modern shop front
+        'https://images.unsplash.com/photo-1562280963-8a5475740a42?w=1600&auto=format&fit=crop&q=80', // Grocery store
+        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&auto=format&fit=crop&q=80', // Local market
+        'https://images.unsplash.com/photo-1516769021019-914a44738bb1?w=1600&auto=format&fit=crop&q=80'  // Shopping mall
     ];
 
     const container = document.getElementById('bannerBg');
