@@ -19,8 +19,9 @@ def index():
     # Get featured products - products with high ratings or recent additions
     featured_products = Product.query.join(Shop)\
         .filter(Shop.is_active == True)\
+        .filter(Product.stock > 0)\
         .order_by(Product.rating.desc(), Product.created_at.desc())\
-        .limit(3).all()  # Limit to 3 products as shown in the static example
+        .limit(8).all()  # Show 8 featured products
     
     return render_template('main/home.html', 
                          featured_shops=featured_shops,

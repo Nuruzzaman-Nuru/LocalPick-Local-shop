@@ -291,11 +291,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 /* Panel styles to match provided mockup */
 .search-panel {
-    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.15));
+    background: #fff;
     border-radius: 12px;
     padding: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-    color: #f1f1f1;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    color: #333;
 }
 .search-panel .search-tabs {
     display: flex;
@@ -303,28 +303,30 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 12px;
 }
 .search-tab {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.08);
-    color: #ddd;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
     padding: 6px 10px;
     border-radius: 20px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 .search-tab[aria-pressed="true"] {
-    background: rgba(255,255,255,0.06);
+    background: #8a3ffc;
     color: #fff;
-    border-color: rgba(255,255,255,0.14);
+    border-color: #8a3ffc;
 }
 .search-inner { margin-bottom: 12px; }
 .search-panel .form-control.search-input {
-    background: rgba(255,255,255,0.04);
-    color: #fff;
-    border: none;
+    background: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
     padding: 12px 14px;
     border-radius: 8px 0 0 8px;
+    font-size: 1rem;
 }
 .btn-search {
     background: #8a3ffc; /* purple */
@@ -335,13 +337,18 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .popular-searches .chip {
     display: inline-block;
-    background: rgba(255,255,255,0.04);
-    color: #ddd;
+    background: #f0f0f0;
+    color: #495057;
     padding: 6px 10px;
     border-radius: 999px;
     margin-left: 6px;
     text-decoration: none;
     font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+.popular-searches .chip:hover {
+    background: #e9ecef;
+    color: #212529;
 }
 .search-bottom { margin-top: 8px; }
 </style>
