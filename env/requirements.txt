@@ -44,3 +44,13 @@ black==23.12.1
 flake8==7.0.0
 >>>>>>> 1829c7bf62e855be81dcdd6bc733a8863b82f360
 mypy==1.8.0
+Flask==2.3.3
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Werkzeug==2.3.7
+gunicorn==21.2.0
+SQLAlchemy==2.0.21
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+Flask-Mail==0.9.1
+python-dotenv==1.0.0
