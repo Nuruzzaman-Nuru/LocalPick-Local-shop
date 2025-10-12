@@ -11,6 +11,12 @@ class Shop(db.Model):
     location_lat = db.Column(db.Float, nullable=True)
     location_lng = db.Column(db.Float, nullable=True)
     address = db.Column(db.String(200), nullable=True)
+    
+    # Image relationship
+    images = db.relationship('Image', lazy=True,
+                           foreign_keys='Image.shop_id',
+                           cascade="all, delete-orphan",
+                           backref=db.backref('shop_ref', lazy=True))
     # Contact information fields
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
@@ -63,9 +69,14 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
     shop_id = db.Column(db.Integer, db.ForeignKey('shop.id'), nullable=False)
-    image_url = db.Column(db.String(255))
     category = db.Column(db.String(50))  # Add category field
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Image relationship
+    images = db.relationship('Image', lazy=True,
+                           foreign_keys='Image.product_id',
+                           cascade="all, delete-orphan",
+                           backref=db.backref('product_ref', lazy=True))
     
     # Rating and review fields
     rating = db.Column(db.Float, default=0.0)  # Average rating
@@ -126,6 +137,7 @@ class Product(db.Model):
 
     def to_dict(self):
         """Convert product to dictionary"""
+        from ..utils.images import get_image_url
         return {
             'id': self.id,
             'name': self.name,
@@ -134,7 +146,8 @@ class Product(db.Model):
             'stock': self.stock,
             'shop_id': self.shop_id,
             'shop_name': self.shop.name,
-            'image_url': self.image_url,
+            'images': [get_image_url(image) for image in self.images] if self.images else [],
+            'image_url': get_image_url(self.images[0]) if self.images and len(self.images) > 0 else None,
             'category': self.category,
             'rating': self.rating,
             'rating_count': self.rating_count,

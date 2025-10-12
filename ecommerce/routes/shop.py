@@ -401,6 +401,8 @@ def update_shop(shop_id):
 @login_required
 @shop_owner_required
 def add_product(shop_id):
+    from ..utils.images import save_image
+    
     shop = Shop.query.get_or_404(shop_id)
     if shop.owner_id != current_user.id:
         flash('Access denied', 'error')
@@ -408,11 +410,13 @@ def add_product(shop_id):
     
     if request.method == 'POST':
         try:
+            # Create product first
             product = Product(
                 name=request.form.get('name'),
                 description=request.form.get('description'),
                 price=float(request.form.get('price')),
                 stock=int(request.form.get('stock')),
+                category=request.form.get('category'),
                 shop_id=shop_id
             )
             
@@ -422,14 +426,36 @@ def add_product(shop_id):
                 product.max_discount_percentage = float(request.form.get('max_discount', 20))
             
             db.session.add(product)
+            db.session.flush()  # Get product ID without committing
+            
+            # Handle images
+            images = request.files.getlist('images[]')  # Get images from the multiple file input
+            if not images and 'image' in request.files:
+                # Fallback to single image if no multiple images
+                images = [request.files['image']]
+                
+            saved_images = []
+            for image_file in images:
+                if image_file and image_file.filename:  # Check if file was actually uploaded
+                    saved_image = save_image(
+                        file=image_file,
+                        uploaded_by=current_user.id,
+                        product_id=product.id
+                    )
+                    if saved_image:
+                        saved_images.append(saved_image)
+                        current_app.logger.info(f"Saved image {saved_image.filename} for product {product.id}")
+            
             db.session.commit()
             
             return jsonify({
                 'status': 'success',
-                'message': 'Product added successfully'
+                'message': 'Product added successfully',
+                'image_count': len(saved_images)
             })
         except Exception as e:
             db.session.rollback()
+            current_app.logger.error(f"Error adding product: {str(e)}")
             return jsonify({
                 'status': 'error',
                 'message': str(e)
@@ -504,6 +530,8 @@ def delete_product(product_id):
 @login_required
 @shop_owner_required
 def edit_product(product_id):
+    from ..utils.images import save_image, delete_image
+    
     product = Product.query.get_or_404(product_id)
     
     # Ensure the product belongs to the current user's shop
@@ -512,22 +540,57 @@ def edit_product(product_id):
         return redirect(url_for('shop.dashboard'))
     
     if request.method == 'POST':
-        product.name = request.form.get('name')
-        product.description = request.form.get('description')
-        product.price = float(request.form.get('price', 0))
-        product.stock = int(request.form.get('stock', 0))
-        product.category = request.form.get('category')
-        
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                product.image = filename
-        
-        db.session.commit()
-        flash('Product updated successfully!', 'success')
-        return redirect(url_for('shop.dashboard'))
+        try:
+            product.name = request.form.get('name')
+            product.description = request.form.get('description')
+            product.price = float(request.form.get('price', 0))
+            product.stock = int(request.form.get('stock', 0))
+            product.category = request.form.get('category')
+            
+            # Handle image deletion
+            images_to_delete = request.form.getlist('delete_images')
+            for image_id in images_to_delete:
+                delete_image(int(image_id))
+            
+            # Handle new images
+            images = request.files.getlist('images')
+            saved_images = []
+            
+            for image_file in images:
+                if image_file:
+                    saved_image = save_image(
+                        file=image_file,
+                        uploaded_by=current_user.id,
+                        product_id=product.id
+                    )
+                    if saved_image:
+                        saved_images.append(saved_image)
+            
+            if not saved_images and 'image' in request.files:
+                # Try single image upload if multiple failed
+                image_file = request.files['image']
+                if image_file:
+                    saved_image = save_image(
+                        file=image_file,
+                        uploaded_by=current_user.id,
+                        product_id=product.id
+                    )
+                    if saved_image:
+                        saved_images.append(saved_image)
+            
+            db.session.commit()
+            flash('Product updated successfully!', 'success')
+            
+            if saved_images:
+                flash(f'{len(saved_images)} new images uploaded.', 'success')
+                
+            return redirect(url_for('shop.dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating product: {str(e)}")
+            flash('Error updating product. Please try again.', 'error')
+            return redirect(url_for('shop.edit_product', product_id=product.id))
     
     return render_template('shop/edit_product.html', product=product)
 

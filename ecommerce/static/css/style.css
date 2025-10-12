@@ -19,6 +19,8 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 /* Logo styles */
@@ -70,7 +72,7 @@ body {
 /* Main content area */
 main {
     flex: 1 0 auto;
-    padding: 2rem;
+    padding: 2rem 2rem 0 2rem;
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
@@ -655,9 +657,16 @@ main {
 /* Footer styles */
 footer {
     margin-top: auto;
-    padding: 2rem 0;
+    padding: 2rem 0 0 0;
     background-color: #1b2337;
     color: white;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-bottom: 0;
 }
 
 footer.bg-info {

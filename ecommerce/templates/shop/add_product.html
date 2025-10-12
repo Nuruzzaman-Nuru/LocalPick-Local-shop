@@ -69,14 +69,61 @@
                         </div>
                         
                         <div class="mb-4">
-                            <label for="image" class="form-label">Product Image</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <label class="form-label">Product Images</label>
+                            <div class="image-upload-container">
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple>
+                                    <small class="text-muted d-block mt-1">You can select multiple images. Supported formats: JPG, PNG, GIF, WEBP</small>
+                                </div>
+                                <div id="image-preview" class="row g-2 mb-3"></div>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Add Product</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                Add Product
+                            </button>
                             <a href="{{ url_for('shop.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
+
+<style>
+.image-preview-item {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #dee2e6;
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #dc3545;
+}
+
+.image-preview-item .remove-image:hover {
+    background: #fff;
+    color: #bb2d3b;
+}
+</style>
                     </form>
                 </div>
             </div>
@@ -114,9 +161,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Image preview functionality
+    const imageInput = document.getElementById('images');
+    const previewContainer = document.getElementById('image-preview');
+    let previewImages = new Set();
+
+    imageInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        
+        files.forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewId = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                if (previewImages.has(previewId)) return;
+                
+                previewImages.add(previewId);
+                
+                const preview = document.createElement('div');
+                preview.className = 'col-auto';
+                preview.innerHTML = `
+                    <div class="image-preview-item" id="${previewId}">
+                        <img src="${e.target.result}" alt="Preview">
+                        <button type="button" class="remove-image" aria-label="Remove image">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                `;
+                
+                preview.querySelector('.remove-image').addEventListener('click', function() {
+                    preview.remove();
+                    previewImages.delete(previewId);
+                });
+                
+                previewContainer.appendChild(preview);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
     // Handle form submission
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const spinner = submitBtn.querySelector('.spinner-border');
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
         
         const formData = new FormData(this);
         if (!enableNegotiation.checked) {
@@ -133,10 +225,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.status === 'success') {
+                let message = result.message;
+                if (result.image_count > 0) {
+                    message += ` (${result.image_count} images uploaded)`;
+                }
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: result.message,
+                    text: message,
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
@@ -155,6 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: 'Error',
                 text: 'Something went wrong. Please try again.'
             });
+        } finally {
+            submitBtn.disabled = false;
+            spinner.classList.add('d-none');
         }
     });
 });
