@@ -49,9 +49,6 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
   ```
 
   ## Features
-<<<<<<< HEAD
-  ![Index](indexpage.png)
-=======
   ![homepage](indexpage.png)
 >>>>>>> a499526 (new)
   - **Multi-Role System**
