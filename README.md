@@ -49,7 +49,7 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
   ```
 
   ## Features
-  ![homepage](indexpage.jpg)
+  ![](indexpage.jpg)
   - **Multi-Role System**
     - Customer: Browse products, negotiate prices, track orders
     - Shop Owner: Manage inventory, handle orders, customize shop settings
