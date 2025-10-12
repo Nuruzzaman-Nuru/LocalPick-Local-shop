@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from threading import Thread
 from .. import mail, db
 from ..models.user import User
+from ..models.order import Order
+from ..utils.distance import calculate_distance
 
 def send_async_email(app, msg):
     with app.app_context():
@@ -35,6 +37,7 @@ def notify_customer_order_status(order):
 
 def notify_shop_owner_new_order(order):
     """Notify shop owner about new orders"""
+    # Send email notification
     msg = Message(
         f'New Order #{order.id} Received',
         recipients=[order.shop.owner.email]
@@ -44,21 +47,68 @@ def notify_shop_owner_new_order(order):
         order=order
     )
     mail.send(msg)
+    
+    # Send SMS if phone number is available
+    if order.shop.owner.phone:
+        from .sms import send_sms
+        message = f"New order #{order.id} received from {order.customer.username}. Total: ${order.total_amount:.2f}. Check your email for details."
+        try:
+            send_sms(order.shop.owner.phone, message)
+        except Exception as e:
+            current_app.logger.error(f'Failed to send SMS to shop owner: {e}')
 
 def notify_admin_order_status(order, change=None):
     """Notify admin about order status changes"""
-    admins = User.query.filter_by(role='admin').all()
+    admins = User.query.filter_by(role='admin', is_active=True).all()
+    if not admins:
+        current_app.logger.warning('No active admin users found for notification')
+        return
+        
+    subject = 'New Order Received'
+    if change and change.get('action'):
+        action_titles = {
+            'order_created': 'New Order Received',
+            'order_confirmed': 'Order Confirmed by Shop',
+            'ready_for_delivery': 'Order Ready for Delivery Assignment',
+            'delivery_assigned': 'Delivery Person Assigned',
+            'order_cancelled': 'Order Cancelled',
+            'status_update': 'Order Status Updated'
+        }
+        subject = action_titles.get(change['action'], 'Order Status Update')
+    
     for admin in admins:
-        msg = Message(
-            f'Order #{order.id} Status Update',
-            recipients=[admin.email]
-        )
-        msg.html = render_template(
-            'email/admin_order_notification.html',
-            order=order,
-            change=change
-        )
-        mail.send(msg)
+        try:
+            # Send email notification
+            msg = Message(
+                f'{subject} - Order #{order.id}',
+                recipients=[admin.email]
+            )
+            msg.html = render_template(
+                'email/admin_order_notification.html',
+                order=order,
+                change=change,
+                admin=admin
+            )
+            mail.send(msg)
+            
+            # Send SMS for urgent actions if admin has phone number
+            if admin.phone and change and change.get('action') in ['order_created', 'ready_for_delivery']:
+                from .sms import send_sms
+                
+                if change['action'] == 'order_created':
+                    sms_text = (f"New order #{order.id} received from {order.customer.username}. "
+                              f"Amount: ${order.total_amount:.2f}. Shop: {order.shop.name}")
+                else:  # ready_for_delivery
+                    sms_text = (f"Order #{order.id} ready for delivery assignment. "
+                              f"Shop: {order.shop.name}. Priority: Urgent")
+                
+                try:
+                    send_sms(admin.phone, sms_text)
+                except Exception as e:
+                    current_app.logger.error(f'Failed to send SMS to admin {admin.username}: {str(e)}')
+                    
+        except Exception as e:
+            current_app.logger.error(f'Failed to send notification to admin {admin.username}: {str(e)}')
 
 def notify_delivery_person_new_order(order):
     """Notify available delivery people about new deliverable orders"""

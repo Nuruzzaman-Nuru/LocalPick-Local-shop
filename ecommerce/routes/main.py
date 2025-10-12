@@ -51,9 +51,9 @@ def projects():
 def checkout():
     cart = get_or_create_cart()
     if isinstance(cart, dict) and not cart:  # Empty session cart
-        return render_template('main/checkout.html', cart_items=[])
+        return render_template('main/checkout.html', cart_items=[], total=0)
     elif not isinstance(cart, dict) and not cart.items:  # Empty database cart
-        return render_template('main/checkout.html', cart_items=[])
+        return render_template('main/checkout.html', cart_items=[], total=0)
 
     if request.method == 'POST':
         # Get form data
@@ -112,6 +112,7 @@ def checkout():
             # Create separate orders for each shop
             orders = []
             for shop_id, items in shop_orders.items():
+                # Create order with basic info
                 order = Order(
                     customer_id=current_user.id,
                     shop_id=shop_id,
@@ -128,12 +129,18 @@ def checkout():
 
                 # Add items to order and calculate total
                 total_amount = 0
+                
+                # Check stock before proceeding
+                for item in items:
+                    if item['product'].stock < item['quantity']:
+                        raise ValueError(f"Not enough stock for {item['product'].name}. Available: {item['product'].stock}")
+
+                # Add items and update stock
                 for item in items:
                     order_item = OrderItem(
                         product_id=item['product'].id,
                         quantity=item['quantity'],
-                        price=item['price'],
-                        shop_id=shop_id
+                        price=item['price']
                     )
                     order.items.append(order_item)
                     total_amount += item['quantity'] * item['price']
@@ -154,14 +161,24 @@ def checkout():
 
             db.session.commit()
 
-            # Send notifications
+            # Process and send notifications for each order
             for order in orders:
-                notify_shop_owner_new_order(order)
-                notify_customer_order_status(order)
+                # Automatically set order to confirmed status
+                order.update_status('confirmed')
+                
+                # Send notifications
+                notify_shop_owner_new_order(order)  # Notify shop owner
+                notify_customer_order_status(order)  # Notify customer
+                
+                # Special admin notification for new confirmed order
                 notify_admin_order_status(order, {
-                    'old': None,
-                    'new': 'pending',
-                    'action': 'order_created'
+                    'old': 'pending',
+                    'new': 'confirmed',
+                    'action': 'new_order_confirmed',
+                    'shop_name': order.shop.name,
+                    'customer_name': order.customer.username,
+                    'total_amount': order.total_amount,
+                    'needs_delivery': bool(order.delivery_address)
                 })
 
             flash('Orders placed successfully!', 'success')

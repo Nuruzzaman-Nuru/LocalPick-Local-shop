@@ -38,11 +38,12 @@ class Order(db.Model):
         self.status = 'assigned'
         self.updated_at = datetime.utcnow()
 
-    def update_status(self, new_status):
+    def update_status(self, new_status, user_id=None):
         """Update order status with proper validation and side effects"""
         valid_transitions = {
             'pending': ['confirmed', 'cancelled'],
-            'confirmed': ['delivering', 'cancelled'],
+            'confirmed': ['ready_for_delivery', 'cancelled'],
+            'ready_for_delivery': ['delivering', 'cancelled'],
             'delivering': ['completed', 'cancelled'],
             'completed': [],  # Final state
             'cancelled': []   # Final state
@@ -51,10 +52,21 @@ class Order(db.Model):
         if new_status not in valid_transitions.get(self.status, []):
             raise ValueError(f'Invalid status transition from {self.status} to {new_status}')
         
+        old_status = self.status
         self.status = new_status
         self.updated_at = datetime.utcnow()
         
+        # Only create note if we have a user_id
+        if user_id:
+            note = OrderNote(
+                order_id=self.id,
+                user_id=user_id,
+                content=f"Order status changed from {old_status} to {new_status}"
+            )
+            db.session.add(note)
+        
         if new_status == 'delivering':
+            # Avoid circular import by importing inside the method
             from ..utils.notifications import estimate_delivery_time
             minutes = estimate_delivery_time(self)
             self.estimated_delivery_time = datetime.utcnow() + timedelta(minutes=minutes)

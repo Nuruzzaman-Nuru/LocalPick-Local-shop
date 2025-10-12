@@ -234,22 +234,57 @@ def update_order_status(order_id):
     
     data = request.get_json()
     new_status = data.get('status')
+    old_status = order.status
+    notes = data.get('notes', '')
     
     try:
         if order.update_status(new_status):
+            if notes:
+                # Add status change note
+                new_note = OrderNote(
+                    order_id=order.id,
+                    user_id=current_user.id,
+                    content=f"Status updated to {new_status}: {notes}"
+                )
+                db.session.add(new_note)
+            
             db.session.commit()
             
-            # Send notifications
-            notify_customer_order_status(order)
-            notify_admin_order_status(order, {
-                'old': order.status,
-                'new': new_status,
-                'action': 'status_update'
-            })
-            
+            # Send notifications based on status change
             if new_status == 'confirmed':
-                # Notify available delivery personnel
-                notify_delivery_person_new_order(order)
+                # When shop owner confirms the order
+                notify_customer_order_status(order)  # Notify customer
+                notify_admin_order_status(order, {   # Notify admin for delivery assignment
+                    'old': old_status,
+                    'new': new_status,
+                    'action': 'order_confirmed',
+                    'shop_name': order.shop.name
+                })
+                
+            elif new_status == 'preparing':
+                # When shop starts preparing the order
+                notify_customer_order_status(order)  # Update customer
+                
+            elif new_status == 'ready_for_delivery':
+                # When order is ready for pickup
+                notify_admin_order_status(order, {   # Notify admin to assign delivery
+                    'old': old_status,
+                    'new': new_status,
+                    'action': 'ready_for_delivery',
+                    'shop_name': order.shop.name
+                })
+                notify_delivery_person_new_order(order)  # Alert available delivery persons
+                
+            elif new_status == 'cancelled':
+                # When order is cancelled by shop
+                notify_customer_order_status(order)  # Inform customer
+                notify_admin_order_status(order, {   # Inform admin
+                    'old': old_status,
+                    'new': new_status,
+                    'action': 'order_cancelled',
+                    'shop_name': order.shop.name,
+                    'reason': notes
+                })
             
             return jsonify({
                 'status': 'success',

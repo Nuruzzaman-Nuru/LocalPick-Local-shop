@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from flask_wtf.csrf import generate_csrf
+from flask_mail import Message
 from sqlalchemy import func, or_
 from functools import wraps
 from ..models.user import User
 from ..models.shop import Shop
-from ..models.order import Order
+from ..models.order import Order, OrderNote
+from .. import mail
 from ..utils.notifications import (
     notify_all_delivery_persons,
     notify_admin_order_status,
@@ -107,16 +109,61 @@ def assign_delivery(order_id):
     delivery_person = User.query.get_or_404(delivery_id)
     if delivery_person.role != 'delivery':
         return jsonify({'success': False, 'error': 'Invalid delivery person'}), 400
-        
+    
+    old_status = order.status
     order.delivery_person_id = delivery_id
     order.status = 'delivering'
-    db.session.commit()
     
-    # Send notifications
-    notify_delivery_assignment(order, delivery_person)
-    notify_customer_order_status(order)
+    # Add note about delivery assignment
+    note = OrderNote(
+        order_id=order.id,
+        user_id=current_user.id,
+        content=f"Delivery assigned to {delivery_person.username}"
+    )
+    db.session.add(note)
     
-    return jsonify({'success': True})
+    try:
+        db.session.commit()
+        
+        # Send notifications to all parties
+        # 1. Notify delivery person about assignment
+        notify_delivery_assignment(order, delivery_person)
+        
+        # 2. Notify customer about delivery assignment
+        notify_customer_order_status(order)
+        
+        # 3. Notify shop owner about delivery assignment
+        msg = Message(
+            f'Delivery Person Assigned for Order #{order.id}',
+            recipients=[order.shop.owner.email]
+        )
+        msg.html = render_template(
+            'email/delivery_assignment.html',
+            order=order,
+            delivery_person=delivery_person
+        )
+        mail.send(msg)
+        
+        # 4. Log status change for admin
+        notify_admin_order_status(order, {
+            'old': old_status,
+            'new': 'delivering',
+            'action': 'delivery_assigned',
+            'delivery_person': delivery_person.username
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Order assigned to {delivery_person.username}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error assigning delivery: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': 'Error assigning delivery person'
+        }), 500
 
 @admin_bp.route('/order/<int:order_id>/confirm', methods=['POST'])
 @login_required
