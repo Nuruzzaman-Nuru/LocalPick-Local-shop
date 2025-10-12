@@ -3,11 +3,89 @@
 {% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
+<style>
+/* Improved text readability */
+body {
+    font-size: 16px;
+    color: #333;
+}
+
+h2, h3, h4, h5, h6 {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.cart-item h6 {
+    font-size: 1.1rem;
+    color: #1a1a1a;
+}
+
+.text-primary {
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+}
+
+.form-check-label {
+    font-size: 1.1rem;
+}
+
+.btn {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.card-title {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+}
+
+.modal-title {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+}
+
+.step h6 {
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+}
+
+.form-label {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Better button visibility */
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    font-weight: 500;
+}
+
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+    font-weight: 500;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    font-weight: 500;
+}
+
+.modal-content {
+    font-size: 1.1rem;
+}
+</style>
+
 <div class="container py-5">
     <div class="row mb-4">
         <div class="d-flex justify-content-between align-items-center">
-            <h2>Shopping Cart</h2>
-            <button class="btn btn-link text-danger" onclick="selectAll()" style="text-decoration: none;">
+            <h2 style="font-size: 2rem; font-weight: 600; color: #1a1a1a;">Shopping Cart</h2>
+            <button class="btn btn-danger" onclick="selectAll()">
                 <i class="bi bi-trash"></i> DELETE
             </button>
         </div>
@@ -52,100 +130,108 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Delivery Address</label>
-                        <div id="shippingAddressDisplay" class="border rounded p-2">Add a delivery address</div>
-                        <div class="mt-2">
-                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addressModal">Change Address</button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method</label>
-                        <div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="pm_cod" value="cod" checked>
-                                <label class="form-check-label" for="pm_cod">Cash on Delivery</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="pm_online" value="online">
-                                <label class="form-check-label" for="pm_online">Online Payment</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Voucher</label>
-                        <div class="input-group">
-                            <input type="text" id="voucherCode" class="form-control" placeholder="Enter voucher code">
-                            <button class="btn btn-outline-secondary" type="button" onclick="applyVoucher()">Apply</button>
-                        </div>
-                    </div>
-
-                    <div id="negotiationSuccess" class="alert alert-success" style="display:none">
-                        <h4 class="alert-heading">Order Confirmed!</h4>
-                        <p>Your order has been confirmed manually. You can proceed to checkout.</p>
-                    </div>
-
-                    <div id="confirmMessage" class="text-muted mb-3" style="display:none">
-                        Select items and click Confirm to lock prices before checkout.
-                    </div>
-
-                    <div class="d-grid">
-                        <button id="manualConfirmButton" class="btn btn-outline-primary mb-2" disabled onclick="confirmOrderManually()">Confirm Selected</button>
+                    <div class="d-grid gap-2">
                         <button id="checkoutBtn" class="btn btn-primary" disabled>PROCEED TO CHECKOUT (0)</button>
+                        <!-- Confirmation button that appears after selecting items -->
+                        <button id="confirmBtn" class="btn btn-success" style="display: none">
+                            <i class="bi bi-check-circle"></i> CONFIRM ORDER
+                        </button>
+                    </div>
+
+                    <!-- Order Confirmation Modal -->
+                    <div class="modal fade" id="confirmOrderModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Your Order</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="steps">
+                                        <!-- Step 1: Delivery Address -->
+                                        <div class="step" id="addressStep">
+                                            <h6 class="mb-3">Step 1: Delivery Address</h6>
+                                            <div class="mb-3">
+                                                <label class="form-label">Street Address</label>
+                                                <input type="text" class="form-control form-control-lg" id="street" required placeholder="Enter your street address">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">City</label>
+                                                    <input type="text" class="form-control form-control-lg" id="city" required placeholder="Enter your city">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Area</label>
+                                                    <input type="text" class="form-control form-control-lg" id="area" required placeholder="Enter your area">
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-primary btn-lg fw-bold" onclick="nextStep('paymentStep')">Next <i class="bi bi-arrow-right"></i></button>
+                                        </div>
+
+                                        <!-- Step 2: Payment Method -->
+                                        <div class="step" id="paymentStep" style="display: none;">
+                                            <h6 class="mb-3">Step 2: Payment Method</h6>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="payment" id="cod" value="cod" checked>
+                                                <label class="form-check-label fw-bold" for="cod" style="font-size: 1.2rem;">
+                                                    <i class="bi bi-cash-coin me-2"></i> Cash on Delivery
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="payment" id="online" value="online">
+                                                <label class="form-check-label fw-bold" for="online" style="font-size: 1.2rem;">
+                                                    <i class="bi bi-credit-card me-2"></i> Online Payment
+                                                </label>
+                                            </div>
+                                            <div class="text-end">
+                                                <button class="btn btn-secondary btn-lg me-2" onclick="prevStep('addressStep')">
+                                                    <i class="bi bi-arrow-left"></i> Back
+                                                </button>
+                                                <button class="btn btn-primary btn-lg fw-bold" onclick="nextStep('confirmStep')">
+                                                    Next <i class="bi bi-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 3: Final Confirmation -->
+                                        <div class="step" id="confirmStep" style="display: none;">
+                                            <h6 class="mb-3">Step 3: Confirm Order</h6>
+                                            <div class="order-summary mb-3">
+                                                <h6>Order Summary</h6>
+                                                <div id="modalOrderSummary"></div>
+                                            </div>
+                                            <div class="delivery-address mb-3">
+                                                <h6>Delivery Address</h6>
+                                                <div id="modalDeliveryAddress"></div>
+                                            </div>
+                                            <div class="payment-method mb-3">
+                                                <h6>Payment Method</h6>
+                                                <div id="modalPaymentMethod"></div>
+                                            </div>
+                                            <div id="confirmationMessage" class="alert alert-success mb-3" style="display: none;">
+                                                Order has been confirmed successfully!
+                                            </div>
+                                            <div class="text-end">
+                                                <button class="btn btn-secondary me-2" onclick="prevStep('paymentStep')" id="backBtn">Back</button>
+                                                <button class="btn btn-success" onclick="confirmAndPlaceOrder()" id="placeOrderBtn">Place Order</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Address Modal -->
-    <div class="modal fade" id="addressModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Select Delivery Address</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="map" style="height: 300px; margin-bottom: 20px;"></div>
-                    <form id="addressForm">
-                        <div class="mb-3">
-                            <label class="form-label">Street Address</label>
-                            <input type="text" class="form-control" id="street" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">City</label>
-                                <input type="text" class="form-control" id="city" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">State</label>
-                                <input type="text" class="form-control" id="state" required>
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <label class="form-label">ZIP</label>
-                                <input type="text" class="form-control" id="zipCode" required>
-                            </div>
-                        </div>
-                        <input type="hidden" id="addressLat">
-                        <input type="hidden" id="addressLng">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveAddress">Save Address</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
 <script>
 function formatPrice(price) {
     if (price === null || price === undefined || isNaN(price)) return '৳0.00';
@@ -433,126 +519,152 @@ function updateCartCount() {
         .catch(err => console.error('Error updating cart count:', err));
 }
 
-function applyVoucher() {
-    const code = document.getElementById('voucherCode').value;
-    if (!code) {
-        alert('Please enter a voucher code');
-        return;
+
+
+function showOrderSummary() {
+    const modalOrderSummary = document.getElementById('modalOrderSummary');
+    if (modalOrderSummary) {
+        modalOrderSummary.innerHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <span>${document.getElementById('subtotal').textContent}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Shipping:</span>
+                <span>${document.getElementById('shippingFee').textContent}</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Total:</span>
+                <span>${document.getElementById('total').textContent}</span>
+            </div>
+        `;
     }
-    // Add voucher application logic here
 }
 
-function initializeAddressForm() {
-    const streetInput = document.getElementById('street');
-    if (!streetInput || !window.google || !google.maps) return;
+function showDeliveryAddress() {
+    const street = document.getElementById('street').value;
+    const city = document.getElementById('city').value;
+    const area = document.getElementById('area').value;
+    
+    const modalDeliveryAddress = document.getElementById('modalDeliveryAddress');
+    if (modalDeliveryAddress) {
+        modalDeliveryAddress.textContent = `${street}, ${area}, ${city}`;
+    }
+}
 
-    const autocomplete = new google.maps.places.Autocomplete(streetInput);
-    autocomplete.addListener('place_changed', function() {
-        const place = autocomplete.getPlace();
-        if (!place.geometry) {
-            alert('Please select a valid address from the dropdown');
+function showPaymentMethod() {
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+    const modalPaymentMethod = document.getElementById('modalPaymentMethod');
+    if (modalPaymentMethod) {
+        modalPaymentMethod.textContent = paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment';
+    }
+}
+
+function nextStep(stepId) {
+    // Validate current step
+    if (stepId === 'paymentStep') {
+        const street = document.getElementById('street').value;
+        const city = document.getElementById('city').value;
+        const area = document.getElementById('area').value;
+        
+        if (!street || !city || !area) {
+            alert('Please fill in all address fields');
             return;
         }
-        
-        document.getElementById('addressLat').value = place.geometry.location.lat();
-        document.getElementById('addressLng').value = place.geometry.location.lng();
-        
-        for (const component of place.address_components) {
-            const type = component.types[0];
-            if (type === 'locality') {
-                document.getElementById('city').value = component.long_name;
-            } else if (type === 'administrative_area_level_1') {
-                document.getElementById('state').value = component.short_name;
-            } else if (type === 'postal_code') {
-                document.getElementById('zipCode').value = component.long_name;
-            }
-        }
-    });
-}
-
-function loadShippingAddress() {
-    fetch('/api/cart/shipping-address')
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success' && data.address) {
-                const el = document.getElementById('shippingAddressDisplay');
-                if (el) el.innerHTML = `<strong>${data.address}</strong>`;
-                const checkoutBtn = document.getElementById('checkoutBtn');
-                if (checkoutBtn && !checkoutBtn.disabled) checkoutBtn.disabled = false;
-            }
-        })
-        .catch(err => console.error('Error loading shipping address:', err));
-}
-
-document.addEventListener('change', function(e) {
-    if (e.target && e.target.name === 'payment_method') {
-        selectedPaymentMethod = e.target.value;
-        sessionStorage.setItem('selectedPaymentMethod', selectedPaymentMethod);
     }
-});
+    
+    if (stepId === 'confirmStep') {
+        showOrderSummary();
+        showDeliveryAddress();
+        showPaymentMethod();
+    }
+    
+    // Hide all steps and show the target step
+    document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
+    document.getElementById(stepId).style.display = 'block';
+}
 
-function confirmOrderManually() {
-    const selectedItems = document.querySelectorAll('.item-checkbox:checked');
-    if (selectedItems.length === 0) {
-        alert('Please select items to confirm');
+function prevStep(stepId) {
+    document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
+    document.getElementById(stepId).style.display = 'block';
+}
+
+function confirmAndPlaceOrder() {
+    const selectedProducts = JSON.parse(sessionStorage.getItem('selectedProducts') || '[]');
+    if (!selectedProducts.length) {
+        alert('Please select items to checkout');
         return;
     }
 
-    const selectedIds = Array.from(selectedItems).map(cb => cb.dataset.itemId);
-    
+    // Get delivery address
+    const street = document.getElementById('street').value;
+    const city = document.getElementById('city').value;
+    const area = document.getElementById('area').value;
+    if (!street || !city || !area) {
+        alert('Please fill in all address fields');
+        return;
+    }
+    const address = `${street}, ${area}, ${city}`;
+
+    // Get payment method
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+    // Disable the place order button
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    const backBtn = document.getElementById('backBtn');
+    if (placeOrderBtn) placeOrderBtn.disabled = true;
+    if (backBtn) backBtn.disabled = true;
+
+    // Show confirmation message
+    const confirmationMsg = document.getElementById('confirmationMessage');
+    if (confirmationMsg) confirmationMsg.style.display = 'block';
+
+    // First confirm all selected items
     fetch('/api/confirm-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item_ids: selectedIds })
+        body: JSON.stringify({ item_ids: selectedProducts })
     })
     .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const messageDiv = document.getElementById('negotiationSuccess');
-            if (messageDiv) {
-                messageDiv.querySelector('.alert-heading').textContent = 'Order Confirmed!';
-                messageDiv.querySelector('p').textContent = 'Your order has been confirmed manually. You can proceed to checkout.';
-                messageDiv.style.display = 'block';
-                messageDiv.scrollIntoView({ behavior: 'smooth' });
-            }
-            updateCart();
+    .then(confirmResp => {
+        if (confirmResp.status === 'success') {
+            // Then proceed with checkout
+            return fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    selected_items: selectedProducts,
+                    delivery_address: address,
+                    payment_method: paymentMethod
+                })
+            });
         } else {
-            alert(data.message || 'Error confirming order');
+            throw new Error(confirmResp.message || 'Error confirming items');
+        }
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.status === 'success') {
+            sessionStorage.removeItem('selectedProducts');
+            // Wait 2 seconds to show the confirmation message before redirecting
+            setTimeout(() => {
+                window.location.href = '{{ url_for("user.orders") }}';
+            }, 2000);
+        } else {
+            throw new Error(resp.message || 'Error placing order.');
         }
     })
     .catch(err => {
         console.error('Error:', err);
-        alert('Error confirming order. Please try again.');
+        if (confirmationMsg) confirmationMsg.style.display = 'none';
+        if (placeOrderBtn) placeOrderBtn.disabled = false;
+        if (backBtn) backBtn.disabled = false;
+        alert(err.message || 'Error placing order. Please try again.');
     });
 }
 
-function updateConfirmButtonState() {
-    const selectedItems = document.querySelectorAll('.item-checkbox:checked');
-    const manualConfirmButton = document.getElementById('manualConfirmButton');
-    const confirmMessage = document.getElementById('confirmMessage');
-    
-    if (!manualConfirmButton || !confirmMessage) return;
-    
-    if (selectedItems.length > 0) {
-        manualConfirmButton.disabled = false;
-        confirmMessage.style.display = 'none';
-    } else {
-        manualConfirmButton.disabled = true;
-        confirmMessage.style.display = 'block';
-    }
-}
-
-document.addEventListener('change', function(e) {
-    if (e.target && e.target.classList && e.target.classList.contains('item-checkbox')) {
-        updateConfirmButtonState();
-    }
-});
-
 document.addEventListener('DOMContentLoaded', function() {
     updateCart();
-    initializeAddressForm();
-    loadShippingAddress();
-    updateConfirmButtonState();
     updateCartCount();
 
     const checkoutBtn = document.getElementById('checkoutBtn');
@@ -566,107 +678,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const addressDisplay = document.getElementById('shippingAddressDisplay');
-            if (addressDisplay && addressDisplay.textContent.includes('Add a delivery address')) {
-                alert('Please add a delivery address before proceeding to checkout');
-                const modalEl = document.getElementById('addressModal');
-                const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                inst.show();
-                return;
-            }
-
-            fetch('/api/cart/shipping-address')
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.address) {
-                        alert('Please select a delivery address');
-                        return;
-                    }
-
-                    const lat = parseFloat(document.getElementById('addressLat').value || 0);
-                    const lng = parseFloat(document.getElementById('addressLng').value || 0);
-
-                    fetch('/api/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            selected_items: selectedProducts,
-                            shipping: {
-                                address: data.address,
-                                lat,
-                                lng
-                            },
-                            payment_method: selectedPaymentMethod,
-                            special_instructions: ''
-                        })
-                    })
-                    .then(r => r.json())
-                    .then(resp => {
-                        if (resp.status === 'success') {
-                            sessionStorage.removeItem('selectedProducts');
-                            sessionStorage.removeItem('selectedPaymentMethod');
-                            alert('Order placed successfully!');
-                            window.location.href = '{{ url_for("user.orders") }}';
-                        } else {
-                            alert(resp.message || 'Error placing order.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Error placing order. Please try again.');
-                    });
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    alert('Error retrieving shipping address. Please try again.');
-                });
+            // Show the order confirmation modal
+            const modal = new bootstrap.Modal(document.getElementById('confirmOrderModal'));
+            modal.show();
         });
     }
-
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'saveAddress') {
-            const form = document.getElementById('addressForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-            
-            const addressParts = [
-                document.getElementById('street').value,
-                document.getElementById('city').value,
-                document.getElementById('state').value,
-                document.getElementById('zipCode').value
-            ];
-            
-            const lat = parseFloat(document.getElementById('addressLat').value || 0);
-            const lng = parseFloat(document.getElementById('addressLng').value || 0);
-            
-            fetch('/api/cart/shipping-address', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    address: addressParts.join(', '),
-                    lat,
-                    lng
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const modalEl = document.getElementById('addressModal');
-                    const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                    inst.hide();
-                    loadShippingAddress();
-                } else {
-                    alert(data.message || 'Error saving address');
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                alert('Error saving address');
-            });
-        }
-    });
 });
 </script>
 {% endblock %}

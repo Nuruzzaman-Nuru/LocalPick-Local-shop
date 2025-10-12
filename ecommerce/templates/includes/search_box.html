@@ -3,25 +3,22 @@
 <!-- Dark rounded search panel matching mockup -->
 <div class="search-panel">
     <form class="search-form" action="{{ url_for('main.search') }}" method="GET">
-        <div class="search-tabs" role="tablist" aria-label="Search types">
-            <button type="button" class="search-tab" data-search-type="all" aria-pressed="{{ 'true' if search_type == 'all' else 'false' }}">
-                <i class="bi bi-search"></i>
-                <span>All</span>
+        <div class="search-buttons mb-2">
+            <button type="button" class="search-btn active" data-search-type="all">
+                <i class="bi bi-search me-2"></i> All
             </button>
-            <button type="button" class="search-tab" data-search-type="products" aria-pressed="{{ 'true' if search_type == 'products' else 'false' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>Products</span>
+            <button type="button" class="search-btn" data-search-type="products">
+                <i class="bi bi-box me-2"></i> Products
             </button>
-            <button type="button" class="search-tab" data-search-type="shops" aria-pressed="{{ 'true' if search_type == 'shops' else 'false' }}">
-                <i class="bi bi-shop"></i>
-                <span>Shops</span>
+            <button type="button" class="search-btn" data-search-type="shops">
+                <i class="bi bi-shop me-2"></i> Shops
             </button>
         </div>
 
         <div class="search-inner">
             <div class="input-group search-container">
                 <input class="form-control search-input" type="search" name="q"
-                       placeholder="Search for products, shops, or locations..."
+                       placeholder="কি খুঁজছেন?"
                        value="{{ request.args.get('q', '') }}"
                        aria-label="Search" autocomplete="off" aria-autocomplete="list">
                 {% if search_type != 'all' %}
@@ -52,6 +49,63 @@
                 <a href="{{ url_for('main.search', q='Groceries') }}" class="chip">Groceries</a>
                 <a href="{{ url_for('main.search', q='Local Shops') }}" class="chip">Local Shops</a>
             </div>
+
+            <style>
+                /* Fix search button styles to match screenshot */
+                .search-input {
+                    font-family: 'SolaimanLipi', Arial, sans-serif !important;
+                    height: 46px;
+                    background: #fff !important;
+                    border: none !important;
+                    color: #333 !important;
+                    font-size: 16px !important;
+                    padding: 8px 16px !important;
+                }
+                
+                .search-input::placeholder {
+                    color: #666 !important;
+                }
+
+                .btn-search {
+                    background: #7e3af2 !important;
+                    width: 46px;
+                    height: 46px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 0 8px 8px 0 !important;
+                    transition: all 0.2s ease;
+                }
+
+                .btn-search:hover {
+                    background: #6929d8 !important;
+                }
+
+                .search-buttons {
+                    background: #2d3339;
+                    border-radius: 8px;
+                    padding: 4px;
+                    display: inline-flex;
+                    gap: 0;
+                }
+
+                .search-btn {
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    color: #fff;
+                    font-weight: 500;
+                    font-size: 14px;
+                }
+
+                .search-btn.active {
+                    background: rgba(255,255,255,0.1);
+                }
+
+                .search-container {
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-radius: 8px;
+                }
+            </style>
         </div>
     </form>
 </div>
@@ -291,33 +345,42 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Panel styles to match provided mockup */
+/* Dark modern search design */
 .search-panel {
-    background: #23272b;
-    border-radius: 12px;
-    padding: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    background: #1a1f24;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     color: #fff;
 }
-.search-panel .search-tabs {
+
+.search-buttons {
     display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
-.search-tab {
-    background: rgba(255,255,255,0.1);
+
+.search-btn {
+    background: transparent;
     border: none;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 20px;
+    color: #8b949e;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.search-tab[aria-pressed="true"] {
-    background: rgba(255,255,255,0.2);
+
+.search-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.search-btn.active {
+    background: rgba(255,255,255,0.1);
     color: #fff;
 }
 .search-inner { margin-bottom: 12px; }
@@ -325,9 +388,14 @@ document.addEventListener('DOMContentLoaded', function() {
     background: rgba(255,255,255,0.1);
     color: #fff;
     border: none;
-    padding: 12px 14px;
+    padding: 14px 18px;
     border-radius: 8px 0 0 8px;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+.search-panel .form-control.search-input:focus {
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 0 0 2px rgba(133, 40, 255, 0.4);
 }
 .search-panel .form-control.search-input::placeholder {
     color: rgba(255,255,255,0.6);
@@ -338,6 +406,15 @@ document.addEventListener('DOMContentLoaded', function() {
     border: none;
     padding: 12px 20px;
     border-radius: 0 8px 8px 0;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+.btn-search:hover {
+    background: #9d4dff;
+    transform: translateY(-1px);
+}
+.btn-search i {
+    font-size: 1.2rem;
 }
 .popular-searches .chip {
     display: inline-block;
