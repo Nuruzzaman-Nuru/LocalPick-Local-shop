@@ -18,6 +18,7 @@ def send_email(subject, recipients, template, **kwargs):
     app = current_app._get_current_object()
     msg = Message(
         subject=subject,
+        sender=app.config['MAIL_DEFAULT_SENDER'],
         recipients=recipients,
         html=render_template(template, **kwargs)
     )
@@ -27,6 +28,7 @@ def notify_customer_order_status(order):
     """Send order status update notification to customer"""
     msg = Message(
         f'Order #{order.id} Status Update',
+        sender=current_app.config['MAIL_DEFAULT_SENDER'],
         recipients=[order.customer.email]
     )
     msg.html = render_template(
@@ -187,6 +189,37 @@ def notify_all_delivery_persons(message):
             recipient=person
         )
         mail.send(msg)
+
+def notify_shop_status_update(shop, status, reason=None):
+    """Send notification to shop owner about shop status update"""
+    subject = 'Shop Application Status Update'
+    msg = Message(
+        subject=subject,
+        recipients=[shop.owner.email]
+    )
+    
+    title = 'Shop Application Approved' if status == 'approved' else 'Shop Application Update'
+    
+    msg.html = render_template(
+        'email/shop_status_update.html',
+        shop=shop,
+        status=status,
+        reason=reason,
+        title=title
+    )
+    mail.send(msg)
+    
+    # Send SMS notification if phone number is available
+    if shop.owner.phone:
+        from .sms import send_sms
+        message = (
+            f"Your shop application for {shop.name} has been {'approved' if status == 'approved' else 'rejected'}. "
+            f"Check your email for details."
+        )
+        try:
+            send_sms(shop.owner.phone, message)
+        except Exception as e:
+            current_app.logger.error(f'Failed to send SMS to shop owner: {e}')
 
 def estimate_delivery_time(order):
     """Estimate delivery time in minutes based on distance and conditions"""

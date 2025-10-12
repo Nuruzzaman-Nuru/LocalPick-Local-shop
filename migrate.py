@@ -44,8 +44,20 @@ def migrate():
             print("Added confirmed column to order table")
         except Exception as e:
             print(f"Error adding confirmed column (it might already exist): {e}")
-
-        conn.commit()
+            
+        # Add approval_status column to shop table
+        try:
+            conn.execute(text('ALTER TABLE shop ADD COLUMN approval_status VARCHAR(20) NOT NULL DEFAULT \'pending\''))
+            print("Added approval_status column to shop table")
+        except Exception as e:
+            print(f"Error adding approval_status column (it might already exist): {e}")
+        
+        # Add confirmed column to cart_item table
+        try:
+            conn.execute(text('ALTER TABLE cart_item ADD COLUMN confirmed BOOLEAN NOT NULL DEFAULT 0'))
+            print("Added confirmed column to cart_item table")
+        except Exception as e:
+            print(f"Error adding confirmed column to cart_item table (it might already exist): {e}")
 
 if __name__ == '__main__':
     app = create_app()

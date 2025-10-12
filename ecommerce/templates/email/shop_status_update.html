@@ -1,0 +1,44 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<div style="padding: 20px; background-color: #ffffff; border-radius: 10px; margin-bottom: 20px;">
+    <h1 style="color: #333; margin-bottom: 20px;">{{ title }}</h1>
+    
+    {% if status == 'approved' %}
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            Congratulations! Your shop "{{ shop.name }}" has been approved by our admin team. You can now start adding products and selling on our platform.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            What you can do now:
+        </p>
+        <ul style="margin-bottom: 20px; padding-left: 20px;">
+            <li style="margin-bottom: 10px;">Add products to your shop</li>
+            <li style="margin-bottom: 10px;">Customize your shop profile</li>
+            <li style="margin-bottom: 10px;">Set up payment methods</li>
+            <li style="margin-bottom: 10px;">Manage orders and track sales</li>
+        </ul>
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            To get started, visit your shop dashboard:
+        </p>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="{{ url_for('shop.dashboard', _external=True) }}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
+                Go to Dashboard
+            </a>
+        </div>
+    {% else %}
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            We regret to inform you that your shop application for "{{ shop.name }}" has not been approved at this time.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            Reason for rejection:
+        </p>
+        <div style="padding: 15px; background-color: #f8f8f8; border-left: 4px solid #e74c3c; margin-bottom: 20px;">
+            {{ reason }}
+        </div>
+        <p style="font-size: 16px; line-height: 1.5; color: #444; margin-bottom: 20px;">
+            You can make necessary changes and submit a new application. If you have any questions, please contact our support team.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

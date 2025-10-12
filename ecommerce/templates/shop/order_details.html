@@ -97,3 +97,84 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('form[action*="update-order-status"]').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const status = form.querySelector('select[name="status"]').value;
+    const orderId = {{ order.id }};
+    
+    // Create loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': form.querySelector('[name="csrf_token"]').value
+        },
+        body: new URLSearchParams({
+            status: status,
+            csrf_token: form.querySelector('[name="csrf_token"]').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the status badge
+            const statusBadge = document.querySelector('.badge');
+            const statusColors = {
+                'pending': 'warning',
+                'confirmed': 'info',
+                'delivering': 'primary', 
+                'completed': 'success',
+                'cancelled': 'danger'
+            };
+            statusBadge.className = `badge bg-${statusColors[status]}`;
+            statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                Order status updated to ${status}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            form.closest('.card').insertAdjacentElement('beforebegin', alert);
+
+            // If confirmed, show message about admin being notified
+            if (status === 'confirmed') {
+                const confirmAlert = document.createElement('div');
+                confirmAlert.className = 'alert alert-info alert-dismissible fade show';
+                confirmAlert.innerHTML = `
+                    Admin has been notified to assign delivery person.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.closest('.card').insertAdjacentElement('beforebegin', confirmAlert);
+            }
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger alert-dismissible fade show';
+        alert.innerHTML = `
+            Error updating order status: ${error.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        form.closest('.card').insertAdjacentElement('beforebegin', alert);
+    })
+    .finally(() => {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+</script>
+{% endblock %}

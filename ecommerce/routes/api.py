@@ -6,7 +6,28 @@ from datetime import datetime
 from ..models.order import Order, OrderItem
 from ..models.negotiation import Negotiation, DeliveryNegotiation
 from ..models.cart import Cart, CartItem
-from ..utils.ai.negotiation_bot import create_negotiation_session, create_delivery_negotiation_session, process_delivery_negotiation
+try:
+    from ..utils.ai.negotiation_bot import (
+        create_negotiation_session,
+        create_delivery_negotiation_session,
+        process_delivery_negotiation
+    )
+except Exception:
+    # Provide safe fallbacks when AI utilities are not available.
+    def create_negotiation_session(*args, **kwargs):
+        class DummyBot:
+            def evaluate_offer(self, amount):
+                return ('reject', None, 'AI unavailable')
+        return DummyBot()
+
+    def create_delivery_negotiation_session(*args, **kwargs):
+        class DummyDeliveryBot:
+            def evaluate_offer(self, amount):
+                return ('reject', None, 'AI unavailable')
+        return DummyDeliveryBot()
+
+    def process_delivery_negotiation(*args, **kwargs):
+        return ('reject', None, 'AI unavailable')
 from ..utils.notifications import (
     notify_shop_owner_new_order,
     notify_customer_order_status,
@@ -541,6 +562,56 @@ def checkout():
             'message': str(e)
         }), 500
 
+@api_bp.route('/confirm-order', methods=['POST'])
+@login_required
+@customer_required
+def confirm_order():
+    """Manually confirm an order for selected cart items"""
+    try:
+        data = request.get_json()
+        item_ids = data.get('item_ids', [])
+        
+        if not item_ids:
+            return jsonify({
+                'status': 'error',
+                'message': 'No items selected for confirmation'
+            }), 400
+            
+        cart = init_cart()
+        confirmed_items = []
+        
+        for item_id in item_ids:
+            cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=item_id).first()
+            if cart_item:
+                cart_item.confirmed = True
+                confirmed_items.append(cart_item)
+                
+        if confirmed_items:
+            db.session.commit()
+            
+            # Calculate new total for confirmed items
+            total = sum(item.quantity * (item.negotiated_price or item.product.price) 
+                       for item in confirmed_items)
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Order confirmed successfully',
+                'total': float(total),
+                'confirmed_items': len(confirmed_items)
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'No valid items found to confirm'
+            }), 400
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @api_bp.route('/cart/count')
 @login_required
 @customer_required
@@ -617,6 +688,7 @@ def get_cart_items():
                         'original_price': float(product.price),
                         'quantity': cart_item.quantity,
                         'total': float(item_total),
+                        'confirmed': True if hasattr(cart_item, 'confirmed') and cart_item.confirmed else False,
                         'image_url': product.image_url if hasattr(product, 'image_url') else None,
                         'shop_name': product.shop.name if product.shop else None,
                         'shop_id': product.shop_id,
@@ -1124,4 +1196,65 @@ def calculate_shipping():
         'shipping_fee': base_fee,
         'distance': max_distance,
         'is_negotiable': True
+    })
+
+@api_bp.route('/order/<int:order_id>/delivery-location')
+@login_required
+def get_order_delivery_location(order_id):
+    """Get delivery person's location and order details for map tracking"""
+    order = Order.query.get_or_404(order_id)
+    
+    # Check access rights
+    if not (current_user.is_admin or 
+            current_user.id == order.customer_id or 
+            current_user.id == order.shop.owner_id):
+        return jsonify({
+            'status': 'error',
+            'message': 'Access denied'
+        }), 403
+        
+    if order.status not in ['delivering']:
+        return jsonify({
+            'status': 'error',
+            'message': 'Order is not in delivery'
+        }), 400
+        
+    if not order.delivery_person_id:
+        return jsonify({
+            'status': 'error',
+            'message': 'No delivery person assigned'
+        }), 400
+        
+    delivery_person = User.query.get_or_404(order.delivery_person_id)
+    
+    if not delivery_person.location_lat or not delivery_person.location_lng:
+        return jsonify({
+            'status': 'error',
+            'message': 'Delivery person location not available'
+        }), 404
+        
+    return jsonify({
+        'status': 'success',
+        'location': {
+            'lat': delivery_person.location_lat,
+            'lng': delivery_person.location_lng,
+            'last_updated': delivery_person.location_updated_at.isoformat() if delivery_person.location_updated_at else None
+        },
+        'order': {
+            'id': order.id,
+            'delivery_person': {
+                'id': delivery_person.id,
+                'username': delivery_person.username,
+                'phone': delivery_person.phone
+            },
+            'shop': {
+                'id': order.shop.id,
+                'name': order.shop.name,
+                'location_lat': order.shop.location_lat,
+                'location_lng': order.shop.location_lng
+            },
+            'delivery_address': order.delivery_address,
+            'delivery_lat': order.delivery_lat,
+            'delivery_lng': order.delivery_lng
+        }
     })

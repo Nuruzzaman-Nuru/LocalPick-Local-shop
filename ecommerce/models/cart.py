@@ -36,6 +36,7 @@ class CartItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     negotiated_price = db.Column(db.Float)  # Price after successful negotiation
+    confirmed = db.Column(db.Boolean, default=False)  # Whether the order is confirmed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

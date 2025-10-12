@@ -12,24 +12,50 @@
 
 <div class="row mb-4">
     <div class="col-md-12">
-            <div class="btn-group" role="group">
-            <a href="{{ url_for('admin.orders', status='pending') }}" 
-               class="btn btn-{{ 'primary' if request.args.get('status') == 'pending' else 'outline-primary' }}">
-                Pending
-            </a>
-            <a href="{{ url_for('admin.orders', status='delivering') }}" 
-               class="btn btn-{{ 'primary' if request.args.get('status') == 'delivering' else 'outline-primary' }}">
-                In Delivery
-            </a>
-            <a href="{{ url_for('admin.orders', status='completed') }}" 
-               class="btn btn-{{ 'primary' if request.args.get('status') == 'completed' else 'outline-primary' }}">
-                Delivered
-            </a>
-            <a href="{{ url_for('admin.orders') }}" 
-               class="btn btn-{{ 'primary' if not request.args.get('status') else 'outline-primary' }}">
-                All Orders
-            </a>
-        </div>
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'all' else '' }}" 
+                   href="{{ url_for('admin.orders') }}">
+                    All Orders 
+                    <span class="badge bg-secondary ms-1">{{ status_counts['all'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'pending' else '' }}" 
+                   href="{{ url_for('admin.orders', status='pending') }}">
+                    Pending
+                    <span class="badge bg-warning ms-1">{{ status_counts['pending'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'confirmed' else '' }}" 
+                   href="{{ url_for('admin.orders', status='confirmed') }}">
+                    Confirmed
+                    <span class="badge bg-info ms-1">{{ status_counts['confirmed'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'delivering' else '' }}" 
+                   href="{{ url_for('admin.orders', status='delivering') }}">
+                    In Delivery
+                    <span class="badge bg-primary ms-1">{{ status_counts['delivering'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'completed' else '' }}" 
+                   href="{{ url_for('admin.orders', status='completed') }}">
+                    Completed
+                    <span class="badge bg-success ms-1">{{ status_counts['completed'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if current_status == 'cancelled' else '' }}" 
+                   href="{{ url_for('admin.orders', status='cancelled') }}">
+                    Cancelled
+                    <span class="badge bg-danger ms-1">{{ status_counts['cancelled'] }}</span>
+                </a>
+            </li>
+        </ul>
     </div>
 </div>
 
@@ -133,11 +159,42 @@
         </div>
     </div>
 </div>
+
+<!-- Delivery Location Modal -->
+<div class="modal fade" id="locationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delivery Person Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="deliveryMap" style="height: 400px;"></div>
+                <div class="mt-3">
+                    <h6>Delivery Details:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Delivery Person:</strong> <span id="deliveryName"></span></li>
+                        <li><strong>Shop:</strong> <span id="shopName"></span></li>
+                        <li><strong>Delivery Address:</strong> <span id="customerAddress"></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<!-- Include Google Maps JavaScript API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
 <script>
-// Helper function to update order status in UI
+let map;
+let markers = [];
+
+function initMap() {
+    // Map will be initialized when location modal is shown
+}
+
 function updateOrderStatus(orderId, status) {
     const row = document.getElementById(`order-${orderId}`);
     if (!row) return;
@@ -147,61 +204,184 @@ function updateOrderStatus(orderId, status) {
     if (statusCell) {
         const badge = statusCell.querySelector('.badge');
         if (badge) {
-            badge.className = `badge bg-${
-                status === 'confirmed' ? 'info' : 
-                status === 'cancelled' ? 'danger' : 
-                status === 'completed' || status === 'delivered' ? 'success' : 
-                status === 'delivering' ? 'primary' :
-                status === 'pending' ? 'warning' :
-                'secondary'
-            }`;
+            const statusColors = {
+                'pending': 'warning',
+                'confirmed': 'info',
+                'delivering': 'primary',
+                'completed': 'success',
+                'cancelled': 'danger'
+            };
+            badge.className = `badge bg-${statusColors[status]}`;
             badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
         }
     }
+    
     // Update confirmed and delivery person cells
     const confirmedCell = row.querySelector('td:nth-child(6)');
     const deliveryCell = row.querySelector('td:nth-child(7)');
+    if (confirmedCell) {
+        confirmedCell.innerHTML = `
+            <span class="badge bg-success">Confirmed</span>
+        `;
+    }
     if (deliveryCell) {
-        deliveryCell.innerHTML = '-';
+        deliveryCell.innerHTML = status === 'confirmed' ? 
+            `<a href="${window.location.pathname}/${orderId}/assign-delivery" class="btn btn-sm btn-primary">Assign Delivery</a>` : 
+            '-';
     }
 
     // Update actions cell
     const actionsCell = row.querySelector('td:last-child');
     if (actionsCell) {
-        actionsCell.querySelector('.btn-group').innerHTML = `
+        let buttons = `
             <button type="button" class="btn btn-sm btn-info view-details" data-order-id="${orderId}">
                 Details
             </button>
         `;
+        if (status === 'delivering') {
+            buttons += `
+                <button type="button" class="btn btn-sm btn-success track-delivery" data-order-id="${orderId}">
+                    Track
+                </button>
+            `;
+        }
+        actionsCell.querySelector('.btn-group').innerHTML = buttons;
     }
 }
 
-document.querySelectorAll('.assign-delivery').forEach(button => {
+// Handle viewing delivery person location
+document.querySelectorAll('.track-delivery').forEach(button => {
     button.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
-        if (confirm('Are you sure you want to assign a delivery person to this order?')) {
-            fetch(`/admin/order/${orderId}/assign-delivery`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
+        
+        // Get the delivery person's location from the API
+        fetch(`/api/order/${orderId}/delivery-location`)
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload();
+                if (data.status === 'success' && data.location) {
+                    showLocationModal(data.location, data.order);
                 } else {
-                    alert(data.message);
+                    alert('Location not available');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error assigning delivery person');
+                alert('Could not get delivery person location');
             });
-        }
     });
 });
 
+// Initialize location modal
+document.getElementById('locationModal').addEventListener('shown.bs.modal', function() {
+    if (!map) {
+        map = new google.maps.Map(document.getElementById('deliveryMap'), {
+            center: { lat: 0, lng: 0 },
+            zoom: 15
+        });
+    }
+});
+
+function showLocationModal(location, orderData) {
+    const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+    
+    // Update delivery details
+    document.getElementById('deliveryName').textContent = orderData.delivery_person.username;
+    document.getElementById('shopName').textContent = orderData.shop.name;
+    document.getElementById('customerAddress').textContent = orderData.delivery_address;
+    
+    modal.show();
+    
+    // Wait for modal to be shown before initializing map
+    modal._element.addEventListener('shown.bs.modal', function() {
+        // Clear existing markers
+        markers.forEach(marker => marker.setMap(null));
+        markers = [];
+        
+        // Center map on delivery person
+        const deliveryLocation = { lat: location.lat, lng: location.lng };
+        map.setCenter(deliveryLocation);
+        
+        // Add marker for delivery person
+        const deliveryMarker = new google.maps.Marker({
+            position: deliveryLocation,
+            map: map,
+            title: orderData.delivery_person.username,
+            icon: {
+                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            }
+        });
+        
+        markers.push(deliveryMarker);
+        
+        // Add marker for shop if coordinates available
+        if (orderData.shop.location_lat && orderData.shop.location_lng) {
+            const shopLocation = {
+                lat: orderData.shop.location_lat,
+                lng: orderData.shop.location_lng
+            };
+            
+            const shopMarker = new google.maps.Marker({
+                position: shopLocation,
+                map: map,
+                title: orderData.shop.name,
+                icon: {
+                    url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                }
+            });
+            
+            markers.push(shopMarker);
+        }
+        
+        // Add marker for delivery address if coordinates available
+        if (orderData.delivery_lat && orderData.delivery_lng) {
+            const customerLocation = {
+                lat: orderData.delivery_lat,
+                lng: orderData.delivery_lng
+            };
+            
+            const customerMarker = new google.maps.Marker({
+                position: customerLocation,
+                map: map,
+                title: 'Delivery Location',
+                icon: {
+                    url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                }
+            });
+            
+            markers.push(customerMarker);
+        }
+        
+        // Create bounds to show all markers
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach(marker => bounds.extend(marker.getPosition()));
+        map.fitBounds(bounds);
+        
+        // Don't zoom in too close if only one marker
+        if (map.getZoom() > 15) map.setZoom(15);
+    }, { once: true });
+}
+
+function showSuccessMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card').insertAdjacentElement('beforebegin', alert);
+}
+
+function showErrorMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card').insertAdjacentElement('beforebegin', alert);
+}
+
+// Button event handlers
 document.querySelectorAll('.view-details').forEach(button => {
     button.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
@@ -227,14 +407,33 @@ document.querySelectorAll('.view-details').forEach(button => {
     });
 });
 
-document.querySelectorAll('.track-delivery').forEach(button => {
+document.querySelectorAll('.assign-delivery').forEach(button => {
     button.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
-        window.open(`/user/track-order/${orderId}`, '_blank');
+        if (confirm('Are you sure you want to assign a delivery person to this order?')) {
+            fetch(`/admin/order/${orderId}/assign-delivery`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    showErrorMessage(data.message || 'Error assigning delivery person');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage('Error assigning delivery person');
+            });
+        }
     });
 });
 
-// Handle order confirmation
 document.querySelectorAll('.confirm-order').forEach(button => {
     button.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
@@ -249,22 +448,20 @@ document.querySelectorAll('.confirm-order').forEach(button => {
 
         // Optimistically update UI
         updateOrderStatus(orderId, 'confirmed');
-        showSuccessMessage('Order confirmed successfully');
 
         fetch(`/admin/order/${orderId}/confirm`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-Token': '{{ csrf_token() }}'
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                showSuccessMessage('Order confirmed successfully');
                 if (data.sms_sent) {
                     showSuccessMessage('SMS sent to customer');
-                } else {
-                    showErrorMessage('SMS could not be sent');
                 }
             } else {
                 throw new Error(data.message);
@@ -275,11 +472,14 @@ document.querySelectorAll('.confirm-order').forEach(button => {
             showErrorMessage(error.message || 'Failed to confirm order');
             // Revert optimistic update
             window.location.reload();
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
         });
     });
 });
 
-// Handle order cancellation
 document.querySelectorAll('.cancel-order').forEach(button => {
     button.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
@@ -292,10 +492,6 @@ document.querySelectorAll('.cancel-order').forEach(button => {
         button.disabled = true;
         button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Cancelling...';
 
-        // Optimistically update UI
-        updateOrderStatus(orderId, 'cancelled');
-        showSuccessMessage('Order cancelled successfully');
-
         fetch(`/admin/order/${orderId}/cancel`, {
             method: 'POST',
             headers: {
@@ -305,16 +501,28 @@ document.querySelectorAll('.cancel-order').forEach(button => {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status !== 'success') {
+            if (data.status === 'success') {
+                updateOrderStatus(orderId, 'cancelled');
+                showSuccessMessage('Order cancelled successfully');
+            } else {
                 throw new Error(data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showErrorMessage(error.message || 'Failed to cancel order');
-            // Revert optimistic update
-            window.location.reload();
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
         });
+    });
+});
+
+document.querySelectorAll('.track-delivery').forEach(button => {
+    button.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
+        window.open(`/user/track-order/${orderId}`, '_blank');
     });
 });
 </script>

@@ -5,8 +5,11 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-12 d-flex justify-content-between align-items-center">
             <h2>Welcome, {{ current_user.username }}</h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+                <i class="bi bi-robot"></i> AI Assistant
+            </button>
         </div>
     </div>
 
@@ -49,6 +52,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Include AI Assistant Modal -->
+    {% include 'includes/ai_assistant.html' %}
 
     <div class="row">
         <!-- Cart Items -->

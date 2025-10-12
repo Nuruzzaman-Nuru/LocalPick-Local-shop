@@ -1,0 +1,155 @@
+<!-- AI Assistant Modal -->
+<div class="modal fade" id="aiAssistantModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">AI Shopping Assistant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Product Search Section -->
+                <div class="mb-4">
+                    <h6>Search for a Product</h6>
+                    <div class="input-group">
+                        <input type="text" id="productSearch" class="form-control" placeholder="Enter product name...">
+                        <button class="btn btn-outline-primary" id="searchBtn">Search</button>
+                    </div>
+                </div>
+
+                <!-- Product Details Section -->
+                <div class="mb-4" id="productDetails" style="display: none;">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title" id="productName"></h6>
+                            <p class="card-text">
+                                Original Price: ৳<span id="productPrice"></span>
+                            </p>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">৳</span>
+                                <input type="number" class="form-control" id="offeredPrice" placeholder="Enter your offer">
+                                <button class="btn btn-primary" id="negotiateBtn">Negotiate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Negotiation Result -->
+                <div id="negotiationResult" style="display: none;">
+                    <div class="alert" role="alert">
+                        <h6 class="alert-heading" id="resultTitle"></h6>
+                        <p id="resultMessage"></p>
+                        <hr>
+                        <p class="mb-0" id="resultSuggestion"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// AI Assistant Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const productSearch = document.getElementById('productSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const productDetails = document.getElementById('productDetails');
+    const productName = document.getElementById('productName');
+    const productPrice = document.getElementById('productPrice');
+    const offeredPrice = document.getElementById('offeredPrice');
+    const negotiateBtn = document.getElementById('negotiateBtn');
+    const negotiationResult = document.getElementById('negotiationResult');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultMessage = document.getElementById('resultMessage');
+    const resultSuggestion = document.getElementById('resultSuggestion');
+    
+    let currentProductId = null;
+
+    searchBtn.addEventListener('click', async function() {
+        const searchQuery = productSearch.value.trim();
+        if (!searchQuery) return;
+
+        try {
+            const response = await fetch(`/api/search/products?q=${encodeURIComponent(searchQuery)}`);
+            const data = await response.json();
+            
+            if (data.products && data.products.length > 0) {
+                const product = data.products[0];
+                currentProductId = product.id;
+                productName.textContent = product.name;
+                productPrice.textContent = product.price.toFixed(2);
+                productDetails.style.display = 'block';
+                negotiationResult.style.display = 'none';
+                offeredPrice.value = '';
+            } else {
+                alert('No products found matching your search.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error searching for products');
+        }
+    });
+
+    negotiateBtn.addEventListener('click', async function() {
+        if (!currentProductId || !offeredPrice.value) return;
+
+        try {
+            const response = await fetch('/ai/negotiate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    product_id: currentProductId,
+                    offered_price: parseFloat(offeredPrice.value)
+                })
+            });
+
+            const data = await response.json();
+            negotiationResult.style.display = 'block';
+
+                if (data.status === 'success') {
+                    if (data.decision === 'accept') {
+                        negotiationResult.className = 'alert alert-success';
+                        resultTitle.textContent = 'Offer Accepted! 🎉';
+                        
+                        // Dispatch event for cart page to show success message
+                        const successEvent = new Event('aiNegotiationSuccess');
+                        window.dispatchEvent(successEvent);
+                        
+                        // Close modal after a short delay
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('aiAssistantModal'));
+                            modal.hide();
+                        }, 2000);
+                    } else if (data.decision === 'counter') {
+                        negotiationResult.className = 'alert alert-info';
+                        resultTitle.textContent = 'Counter Offer';
+                    } else {
+                        negotiationResult.className = 'alert alert-danger';
+                        resultTitle.textContent = 'Offer Declined';
+                    }                resultMessage.textContent = data.message;
+                if (data.counter_price) {
+                    resultSuggestion.textContent = `Suggested price: ৳${data.counter_price.toFixed(2)}`;
+                }
+            } else {
+                negotiationResult.className = 'alert alert-danger';
+                resultTitle.textContent = 'Error';
+                resultMessage.textContent = data.message || 'An error occurred during negotiation';
+                resultSuggestion.textContent = '';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error during negotiation');
+        }
+    });
+
+    // Reset everything when modal is closed
+    document.getElementById('aiAssistantModal').addEventListener('hidden.bs.modal', function () {
+        productSearch.value = '';
+        productDetails.style.display = 'none';
+        negotiationResult.style.display = 'none';
+        currentProductId = null;
+    });
+});
+</script>

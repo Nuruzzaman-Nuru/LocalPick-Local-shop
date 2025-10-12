@@ -1,6 +1,9 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.dialects.postgresql import JSONB
+from ecommerce import db, login_manager
 from datetime import datetime
+from sqlalchemy import Float
 from .. import db
 
 class User(UserMixin, db.Model):
@@ -35,10 +38,12 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def update_location(self, lat, lng, address):
+    def update_location(self, lat, lng, address=None):
         self.location_lat = lat
         self.location_lng = lng
-        self.address = address
+        if address:
+            self.address = address
+        self.location_updated_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
     @property

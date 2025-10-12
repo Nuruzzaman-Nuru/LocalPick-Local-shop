@@ -32,8 +32,9 @@
                     <label class="form-label">Filter Status</label>
                     <select class="form-select" name="status">
                         <option value="">All Shops</option>
-                        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
-                        <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending Approval</option>
+                        <option value="approved" {% if request.args.get('status') == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if request.args.get('status') == 'rejected' %}selected{% endif %}>Rejected</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -81,9 +82,13 @@
                             <td>{{ shop.products|length }}</td>
                             <td>{{ shop.orders|length }}</td>
                             <td>
-                                <span class="badge bg-{{ 'success' if shop.is_active else 'danger' }}">
-                                    {{ 'Active' if shop.is_active else 'Inactive' }}
-                                </span>
+                                {% if shop.approval_status == 'pending' %}
+                                    <span class="badge bg-warning">Pending Approval</span>
+                                {% elif shop.approval_status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif shop.approval_status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
                             </td>
                             <td>{{ shop.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
@@ -92,11 +97,25 @@
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-{{ 'danger' if shop.is_active else 'success' }}"
-                                            onclick="toggleShopStatus({{ shop.id }}, {{ shop.is_active|tojson }})">
-                                        <i class="bi bi-{{ 'x-circle' if shop.is_active else 'check-circle' }}"></i>
-                                    </button>
+                                    {% if shop.approval_status == 'pending' %}
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-success"
+                                                onclick="approveShop({{ shop.id }})">
+                                            <i class="bi bi-check-circle"></i> Confirm
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="rejectShop({{ shop.id }})">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </button>
+                                    {% elif shop.approval_status == 'approved' %}
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-{{ 'danger' if shop.is_active else 'success' }}"
+                                                onclick="toggleShopStatus({{ shop.id }}, {{ shop.is_active|tojson }})">
+                                            <i class="bi bi-{{ 'x-circle' if shop.is_active else 'check-circle' }}"></i>
+                                            {{ 'Deactivate' if shop.is_active else 'Activate' }}
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -151,6 +170,72 @@ function toggleShopStatus(shopId, currentStatus) {
     .catch(error => {
         console.error('Error:', error);
         alert('An error occurred while updating shop status');
+    });
+}
+
+function approveShop(shopId) {
+    if (!confirm('Are you sure you want to approve this shop?')) {
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    if (!csrfToken) {
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+
+    fetch(`/admin/shop/${shopId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to approve shop');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while approving the shop');
+    });
+}
+
+function rejectShop(shopId) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason === null) {
+        return; // User clicked Cancel
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    if (!csrfToken) {
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+
+    fetch(`/admin/shop/${shopId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to reject shop');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while rejecting the shop');
     });
 }
 </script>

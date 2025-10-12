@@ -34,12 +34,22 @@
         </div>
     </div>
 
+    <!-- Print-only Header -->
+    <div class="d-none d-print-block mb-4 text-center">
+        <h1>{{ shop.name }} - Shop Report</h1>
+        <p>Generated on: {{ now.strftime('%Y-%m-%d %H:%M') }}</p>
+        <hr>
+    </div>
+
     <!-- Product Management Section -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Manage Products</h5>
             <div class="d-flex gap-2">
-                <form class="search-form d-flex" action="{{ url_for('main.search') }}" method="GET">
+                <button onclick="window.print()" class="btn btn-secondary no-print me-2">
+                    <i class="bi bi-printer"></i> Print Report
+                </button>
+                <form class="search-form d-flex no-print" action="{{ url_for('main.search') }}" method="GET">
                     <input type="hidden" name="type" value="products">
                     <input type="hidden" name="shop_id" value="{{ shop.id }}">
                     <div class="input-group">
@@ -53,7 +63,7 @@
                         <div class="search-suggestions dropdown-menu"></div>
                     </div>
                 </form>
-                <a href="{{ url_for('shop.add_product', shop_id=shop.id) }}" class="btn btn-primary">
+                <a href="{{ url_for('shop.add_product', shop_id=shop.id) }}" class="btn btn-primary no-print">
                     <i class="bi bi-plus-circle"></i> Add New Product
                 </a>
             </div>

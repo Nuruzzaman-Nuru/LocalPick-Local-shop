@@ -42,12 +42,15 @@ def owner_required(shop_id):
 
 @shop_bp.route('/')
 def index():
-    shops = Shop.query.filter_by(is_active=True).all()
+    shops = Shop.query.filter_by(is_active=True, approval_status='approved').all()
     return render_template('shop/index.html', shops=shops)
 
 @shop_bp.route('/<int:shop_id>')
 def view(shop_id):
     shop = Shop.query.get_or_404(shop_id)
+    if not shop.is_active or shop.approval_status != 'approved':
+        flash('This shop is not currently active', 'warning')
+        return redirect(url_for('shop.index'))
     return render_template('shop/view.html', shop=shop)
 
 @shop_bp.route('/dashboard')
@@ -57,6 +60,12 @@ def dashboard():
     shop = current_user.shop
     if not shop:
         return redirect(url_for('shop.create'))
+    
+    # Show approval status warning if not approved
+    if shop.approval_status == 'pending':
+        flash('Your shop is pending approval from admin. You cannot add products until approved.', 'warning')
+    elif shop.approval_status == 'rejected':
+        flash('Your shop application was rejected. Please contact admin for more information.', 'danger')
     
     # Get statistics
     products_count = len(shop.products)
@@ -86,7 +95,9 @@ def dashboard():
                          active_orders_count=active_orders_count,
                          total_revenue=total_revenue,
                          recent_orders=recent_orders,
-                         low_stock_products=low_stock_products)
+                         low_stock_products=low_stock_products,
+                         now=datetime.now())
+    
 
 @shop_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -232,10 +243,16 @@ def update_order_status(order_id):
             'message': 'Access denied. This order belongs to another shop.'
         }), 403
     
-    data = request.get_json()
-    new_status = data.get('status')
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+        new_status = data.get('status')
+        notes = data.get('notes', '')
+    else:
+        new_status = request.form.get('status')
+        notes = request.form.get('notes', '')
+    
     old_status = order.status
-    notes = data.get('notes', '')
     
     try:
         if order.update_status(new_status):
@@ -442,6 +459,11 @@ def add_product(shop_id):
     if shop.owner_id != current_user.id:
         flash('Access denied', 'error')
         return redirect(url_for('shop.index'))
+        
+    # Check shop approval status
+    if shop.approval_status != 'approved':
+        flash('Your shop must be approved by admin before you can add products.', 'warning')
+        return redirect(url_for('shop.dashboard'))
     
     if request.method == 'POST':
         try:

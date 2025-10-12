@@ -108,6 +108,7 @@ def accept_delivery(order_id):
             'message': 'You cannot accept more deliveries at this time'
         }), 400
     
+    old_status = order.status
     order.delivery_person_id = current_user.id
     order.status = 'delivering'
     order.estimated_delivery_time = datetime.now() + timedelta(hours=1)  # Default 1 hour estimate
@@ -115,7 +116,12 @@ def accept_delivery(order_id):
     
     # Send notifications
     notify_customer_order_status(order)
-    notify_admin_order_status(order)
+    notify_admin_order_status(order, {
+        'old': old_status,
+        'new': 'delivering',
+        'action': 'delivery_assigned',
+        'delivery_person': current_user.username
+    })
     
     return jsonify({'status': 'success'})
 
@@ -131,8 +137,18 @@ def update_delivery_status(order_id):
             'message': 'You are not assigned to this delivery'
         }), 403
     
-    data = request.get_json()
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+        
     new_status = data.get('status')
+    if not new_status:
+        return jsonify({
+            'status': 'error',
+            'message': 'Status is required'
+        }), 400
     
     try:
         # Update order status with validation

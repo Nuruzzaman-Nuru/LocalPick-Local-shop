@@ -14,6 +14,8 @@
     </div>
     
     <div class="row">
+
+
         <div class="col-md-8">
             <div class="card mb-3">
                 <div class="card-body">
@@ -31,103 +33,8 @@
             </div>
         </div>
         
-        <div class="col-md-4">
-            <!-- Location Section -->
-            <div class="card mb-3">
-                <div class="card-body">                    
-                    <h6 class="card-title">Shipping Address (Optional)</h6>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-geo-alt text-primary me-2"></i>
-                        <div id="shippingAddressDisplay" class="flex-grow-1">
-                            <span class="text-muted">Add a delivery address (optional)</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addressModal">
-                            Change
-                        </button>
-                    </div>
-                    <small class="text-muted d-block mt-2">You can also add your address during checkout</small>
-                </div>
-            </div>
-
-            <!-- Order Summary -->
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Order Summary</h5>
-                    
-                    <!-- Order Details -->
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span id="subtotal">৳0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Shipping Fee:</span>
-                        <span id="shippingFee">৳0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Tax:</span>
-                        <span id="tax">৳0.00</span>
-                    </div>
-
-                    <!-- Voucher Section -->
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="voucherCode" placeholder="Enter voucher code">
-                            <button class="btn btn-outline-primary" type="button" onclick="applyVoucher()">Apply</button>
-                        </div>
-                        <div id="voucherMessage" class="form-text"></div>
-                    </div>
-
-                    <!-- Payment Method -->
-                    <div class="mb-3">
-                        <h6 class="mb-2">Select Payment Method</h6>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" 
-                                   id="cod" value="cod" checked>
-                            <label class="form-check-label" for="cod">
-                                Cash on Delivery
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" 
-                                   id="bkash" value="bkash">
-                            <label class="form-check-label d-flex align-items-center" for="bkash">
-                                <img src="{{ url_for('static', filename='images/payments/bkash.png') }}" 
-                                     alt="bKash" height="20" class="me-2"> bKash
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" 
-                                   id="nagad" value="nagad">
-                            <label class="form-check-label d-flex align-items-center" for="nagad">
-                                <img src="{{ url_for('static', filename='images/payments/nagad.png') }}" 
-                                     alt="Nagad" height="20" class="me-2"> Nagad
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" 
-                                   id="card" value="card">
-                            <label class="form-check-label" for="card">
-                                Credit/Debit Card
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between border-top pt-2 mb-3">
-                        <strong>Total:</strong>
-                        <strong id="total">৳0.00</strong>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button id="checkoutBtn" class="btn btn-primary" onclick="proceedToCheckout()" disabled>
-                            PROCEED TO CHECKOUT (0)
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+       
+    
 <!-- Address Modal -->
 <div class="modal fade" id="addressModal" tabindex="-1">
     <div class="modal-dialog">
@@ -175,7 +82,10 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
 <script>
 function formatPrice(price) {
-    return '৳' + parseFloat(price).toFixed(2);
+    if (price === null || price === undefined || isNaN(price)) {
+        return '৳0.00';
+    }
+    return '৳' + Math.max(0, parseFloat(price)).toFixed(2);
 }
 
 function handleSelectAll() {
@@ -231,7 +141,11 @@ function updateCart() {
                     `;
 
                     shop.items.forEach(item => {
-                        subtotal += item.subtotal;
+                        // Handle null, undefined or NaN values
+                        const itemSubtotal = item.subtotal || 0;
+                        subtotal += isNaN(itemSubtotal) ? 0 : itemSubtotal;
+                        // Use negotiated price if available
+                        const displayPrice = item.negotiated_price || item.price || 0;
                         html += `
                             <div class="cart-item border-top pt-3">
                                 <div class="d-flex">
@@ -241,7 +155,10 @@ function updateCart() {
                                     </div>
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1">${item.name}</h6>
-                                        <p class="mb-1 text-primary">${formatPrice(item.price)}</p>
+                                        <p class="mb-1 text-primary">${formatPrice(displayPrice)}</p>
+                                        <p class="mb-2">
+                                            ${item.confirmed ? '<span class="badge bg-success">Confirmed</span>' : ''}
+                                        </p>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="input-group input-group-sm" style="width: 120px;">
                                                 <button class="btn btn-outline-secondary" type="button"
@@ -692,11 +609,77 @@ document.querySelectorAll('input[name="payment_method"]').forEach(input => {
     });
 });
 
+// Manual order confirmation function
+function confirmOrderManually() {
+    const selectedItems = document.querySelectorAll('.item-checkbox:checked');
+    if (selectedItems.length === 0) {
+        alert('Please select items to confirm');
+        return;
+    }
+
+    const selectedIds = Array.from(selectedItems).map(checkbox => checkbox.dataset.itemId);
+    
+    fetch('/api/confirm-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            item_ids: selectedIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Show success message
+            const messageDiv = document.getElementById('negotiationSuccess');
+            messageDiv.querySelector('.alert-heading').textContent = 'Order Confirmed!';
+            messageDiv.querySelector('p').textContent = 'Your order has been confirmed manually. You can proceed to checkout.';
+            messageDiv.style.display = 'block';
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Refresh cart to show updated prices
+            updateCart();
+        } else {
+            alert(data.message || 'Error confirming order');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error confirming order. Please try again.');
+    });
+}
+
+
+
+// Update confirmation button state
+function updateConfirmButtonState() {
+    const selectedItems = document.querySelectorAll('.item-checkbox:checked');
+    const manualConfirmButton = document.getElementById('manualConfirmButton');
+    const confirmMessage = document.getElementById('confirmMessage');
+    
+    if (selectedItems.length > 0) {
+        manualConfirmButton.disabled = false;
+        confirmMessage.style.display = 'none';
+    } else {
+        manualConfirmButton.disabled = true;
+        confirmMessage.style.display = 'block';
+    }
+}
+
+// Handle item checkbox changes
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('item-checkbox')) {
+        updateConfirmButtonState();
+    }
+});
+
 // Initialize cart when page loads
 document.addEventListener('DOMContentLoaded', function() {
     updateCart();
     initializeAddressForm();
     loadShippingAddress();
+    updateConfirmButtonState();
     fetch('/api/cart/count')
         .then(response => response.json())
         .then(data => {

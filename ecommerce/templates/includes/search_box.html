@@ -66,19 +66,20 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: #2d3339;
+    border: none;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     max-height: 300px;
     overflow-y: auto;
     display: none;
+    margin-top: 4px;
 }
 
 .suggestion-item.active,
 .suggestion-item:focus {
-    background-color: #e9f2ff;
+    background-color: rgba(255,255,255,0.1);
     outline: none;
 }
 
@@ -86,12 +87,13 @@
     display: inline-block;
     width: 18px;
     height: 18px;
-    border: 2px solid rgba(0,0,0,0.1);
-    border-left-color: #007bff;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-left-color: #8528ff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     vertical-align: middle;
     margin-left: 8px;
+    color: #fff;
 }
 
 @keyframes spin {
@@ -291,11 +293,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 /* Panel styles to match provided mockup */
 .search-panel {
-    background: #fff;
+    background: #23272b;
     border-radius: 12px;
     padding: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-    color: #333;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    color: #fff;
 }
 .search-panel .search-tabs {
     display: flex;
@@ -303,10 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 12px;
 }
 .search-tab {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    color: #495057;
-    padding: 6px 10px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+    padding: 8px 12px;
     border-radius: 20px;
     display: inline-flex;
     align-items: center;
@@ -315,42 +317,53 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: all 0.2s ease;
 }
 .search-tab[aria-pressed="true"] {
-    background: #8a3ffc;
+    background: rgba(255,255,255,0.2);
     color: #fff;
-    border-color: #8a3ffc;
 }
 .search-inner { margin-bottom: 12px; }
 .search-panel .form-control.search-input {
-    background: #f8f9fa;
-    color: #212529;
-    border: 1px solid #dee2e6;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: none;
     padding: 12px 14px;
     border-radius: 8px 0 0 8px;
     font-size: 1rem;
 }
+.search-panel .form-control.search-input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
 .btn-search {
-    background: #8a3ffc; /* purple */
+    background: #8528ff;
     color: white;
     border: none;
-    padding: 10px 16px;
+    padding: 12px 20px;
     border-radius: 0 8px 8px 0;
 }
 .popular-searches .chip {
     display: inline-block;
-    background: #f0f0f0;
-    color: #495057;
-    padding: 6px 10px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 6px 12px;
     border-radius: 999px;
-    margin-left: 6px;
+    margin-left: 8px;
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s ease;
 }
 .popular-searches .chip:hover {
-    background: #e9ecef;
-    color: #212529;
+    background: rgba(255,255,255,0.2);
 }
-.search-bottom { margin-top: 8px; }
+.search-bottom { 
+    margin-top: 12px;
+    color: #fff;
+}
+.search-bottom .form-check-input {
+    background-color: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+}
+.search-bottom label {
+    color: rgba(255,255,255,0.8);
+}
 </style>
 
 <script>

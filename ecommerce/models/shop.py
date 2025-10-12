@@ -11,6 +11,7 @@ class Shop(db.Model):
     location_lat = db.Column(db.Float, nullable=True)
     location_lng = db.Column(db.Float, nullable=True)
     address = db.Column(db.String(200), nullable=True)
+    approval_status = db.Column(db.String(20), server_default='pending')  # pending, approved, rejected
     
     # Image relationship
     images = db.relationship('Image', lazy=True,
@@ -23,7 +24,7 @@ class Shop(db.Model):
     website = db.Column(db.String(200))
     business_hours = db.Column(db.Text)  # Stored as JSON string
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=False)  # Only true after approval
       # Relationships
     products = db.relationship('Product', backref='shop', lazy=True)
 

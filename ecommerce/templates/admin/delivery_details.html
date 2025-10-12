@@ -67,7 +67,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for order in delivery_person.delivery_orders|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
+                                    {% set recent_orders = delivery_person.delivery_orders|sort(attribute='created_at', reverse=true) %}
+                                    {% for order in recent_orders[:5] %}
                                     <tr>
                                         <td>{{ order.id }}</td>
                                         <td>{{ order.customer.username }}</td>

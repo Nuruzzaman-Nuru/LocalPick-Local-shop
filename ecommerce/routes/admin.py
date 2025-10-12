@@ -12,7 +12,8 @@ from ..utils.notifications import (
     notify_all_delivery_persons,
     notify_admin_order_status,
     notify_delivery_assignment,
-    notify_customer_order_status
+    notify_customer_order_status,
+    notify_shop_status_update
 )
 from ..utils.sms import send_sms
 from .. import db
@@ -35,6 +36,7 @@ def dashboard():    # Calculate dashboard statistics
     stats = {
         'total_users': User.query.filter_by(role='user').count(),
         'active_shops': Shop.query.filter_by(is_active=True).count(),
+        'pending_shops': Shop.query.filter_by(approval_status='pending').count(),
         'total_delivery': User.query.filter_by(role='delivery').count(),
         'pending_orders': Order.query.filter_by(status='pending').count(),
         'confirmed_orders': Order.query.filter_by(confirmed=True).count(),
@@ -52,13 +54,28 @@ def dashboard():    # Calculate dashboard statistics
 @login_required
 @admin_required
 def orders():
-    status = request.args.get('status', None)
+    # Get filter parameters with defaults
+    status = request.args.get('status', 'all')
+    
+    # Start with base query
     query = Order.query
     
-    if status:
+    # Apply status filter if not 'all'
+    if status != 'all' and status in ['pending', 'confirmed', 'delivering', 'completed', 'cancelled']:
         query = query.filter_by(status=status)
-        
+    
+    # Always order by most recent first
     orders = query.order_by(Order.created_at.desc()).all()
+    
+    # Get counts for each status
+    status_counts = {
+        'all': Order.query.count(),
+        'pending': Order.query.filter_by(status='pending').count(),
+        'confirmed': Order.query.filter_by(status='confirmed').count(),
+        'delivering': Order.query.filter_by(status='delivering').count(),
+        'completed': Order.query.filter_by(status='completed').count(),
+        'cancelled': Order.query.filter_by(status='cancelled').count()
+    }
     
     # Define status color mapping for Bootstrap badges
     order_status_colors = {
@@ -71,6 +88,8 @@ def orders():
     
     return render_template('admin/orders.html', 
                          orders=orders,
+                         current_status=status,
+                         status_counts=status_counts,
                          order_status_colors=order_status_colors)
 
 @admin_bp.route('/order/<int:order_id>/details')
@@ -89,10 +108,22 @@ def order_details(order_id):
         'cancelled': 'danger'
     }
     
+    # Define delivery status color mapping
+    delivery_status_colors = {
+        'assigned': 'info',
+        'picked_up': 'primary',
+        'on_way': 'primary',
+        'arrived': 'success',
+        'completed': 'success',
+        'cancelled': 'danger',
+        'pending': 'warning'
+    }
+    
     return render_template('admin/order_details.html', 
                          order=order,
                          available_delivery=available_delivery,
-                         order_status_colors=order_status_colors)
+                         order_status_colors=order_status_colors,
+                         delivery_status_colors=delivery_status_colors)
 
 @admin_bp.route('/order/<int:order_id>/assign-delivery', methods=['POST'])
 @login_required
@@ -374,13 +405,114 @@ def manage_shops():
         ).join(User, Shop.owner_id == User.id, isouter=True)
     
     # Apply status filter
-    if status_filter == 'active':
-        query = query.filter_by(is_active=True)
-    elif status_filter == 'inactive':
-        query = query.filter_by(is_active=False)
+    if status_filter in ['pending', 'approved', 'rejected']:
+        query = query.filter_by(approval_status=status_filter)
     
     shops = query.order_by(Shop.created_at.desc()).all()
-    return render_template('admin/manage_shops.html', shops=shops)
+    
+    # Define status color mapping for Bootstrap badges
+    shop_status_colors = {
+        'pending': 'warning',
+        'approved': 'success',
+        'rejected': 'danger'
+    }
+    
+    return render_template('admin/manage_shops.html', 
+                         shops=shops,
+                         shop_status_colors=shop_status_colors)
+
+@admin_bp.route('/shop/<int:shop_id>/details')
+@login_required
+@admin_required
+def shop_details(shop_id):
+    shop = Shop.query.get_or_404(shop_id)
+    return render_template('admin/shop_details.html', shop=shop)
+
+@admin_bp.route('/shop/<int:shop_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_shop(shop_id):
+    shop = Shop.query.get_or_404(shop_id)
+    
+    if shop.approval_status != 'pending':
+        return jsonify({
+            'status': 'error',
+            'message': 'Shop is not in pending status'
+        }), 400
+        
+    try:
+        # Update shop status
+        shop.approval_status = 'approved'
+        shop.is_active = True
+        db.session.commit()
+        
+        # Send notification
+        notify_shop_status_update(shop, 'approved')
+        
+        # Send SMS notification if phone number is available
+        if shop.owner.phone:
+            try:
+                message = f"Congratulations! Your shop '{shop.name}' has been approved. You can now start adding products."
+                send_sms(shop.owner.phone, message)
+            except Exception as e:
+                current_app.logger.error(f'Failed to send SMS to shop owner: {e}')
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Shop approved successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error approving shop: {e}')
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/shop/<int:shop_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_shop(shop_id):
+    shop = Shop.query.get_or_404(shop_id)
+    data = request.get_json()
+    reason = data.get('reason', 'No reason provided')
+    
+    if shop.approval_status != 'pending':
+        return jsonify({
+            'status': 'error',
+            'message': 'Shop is not in pending status'
+        }), 400
+        
+    try:
+        # Update shop status
+        shop.approval_status = 'rejected'
+        shop.is_active = False
+        db.session.commit()
+        
+        # Send notification
+        notify_shop_status_update(shop, 'rejected', reason)
+        
+        # Send SMS notification if phone number is available
+        if shop.owner.phone:
+            try:
+                message = f"Your shop application for '{shop.name}' has been rejected. Please check your email for details."
+                send_sms(shop.owner.phone, message)
+            except Exception as e:
+                current_app.logger.error(f'Failed to send SMS to shop owner: {e}')
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Shop rejected successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error rejecting shop: {e}')
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 @admin_bp.route('/api/admin/shops/<int:shop_id>/toggle-status', methods=['POST'])
 @login_required
