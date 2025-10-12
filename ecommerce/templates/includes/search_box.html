@@ -1,21 +1,60 @@
 {% set search_type = search_type|default('all') %}
-<form class="search-form" action="{{ url_for('main.search') }}" method="GET">
-    <div class="input-group search-container">
-        <input class="form-control search-input" type="search" name="q" 
-                          placeholder="Search for shops, products, or locations..." 
-                          value="{{ request.args.get('q', '') }}"
-                          aria-label="Search" autocomplete="off">
-        {% if search_type != 'all' %}
-            <input type="hidden" name="type" value="{{ search_type }}">
-        {% endif %}
-        <button class="btn btn-outline-primary" type="submit">
-            <i class="bi bi-search"></i>
-        </button>
-        <div class="search-suggestions">
-            <!-- Suggestions will be populated here -->
+
+<!-- Dark rounded search panel matching mockup -->
+<div class="search-panel">
+    <form class="search-form" action="{{ url_for('main.search') }}" method="GET">
+        <div class="search-tabs" role="tablist" aria-label="Search types">
+            <button type="button" class="search-tab" data-search-type="all" aria-pressed="{{ 'true' if search_type == 'all' else 'false' }}">
+                <i class="bi bi-search"></i>
+                <span>All</span>
+            </button>
+            <button type="button" class="search-tab" data-search-type="products" aria-pressed="{{ 'true' if search_type == 'products' else 'false' }}">
+                <i class="bi bi-box-seam"></i>
+                <span>Products</span>
+            </button>
+            <button type="button" class="search-tab" data-search-type="shops" aria-pressed="{{ 'true' if search_type == 'shops' else 'false' }}">
+                <i class="bi bi-shop"></i>
+                <span>Shops</span>
+            </button>
         </div>
-    </div>
-</form>
+
+        <div class="search-inner">
+            <div class="input-group search-container">
+                <input class="form-control search-input" type="search" name="q"
+                       placeholder="Search for products, shops, or locations..."
+                       value="{{ request.args.get('q', '') }}"
+                       aria-label="Search" autocomplete="off" aria-autocomplete="list">
+                {% if search_type != 'all' %}
+                    <input type="hidden" name="type" value="{{ search_type }}">
+                {% else %}
+                    <input type="hidden" name="type" value="all">
+                {% endif %}
+                <button class="btn btn-search" type="submit" aria-label="Search">
+                    <i class="bi bi-search"></i>
+                    <span class="visually-hidden">Search</span>
+                </button>
+                <div class="search-suggestions" role="listbox" aria-label="Search suggestions">
+                    <!-- Suggestions will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="search-bottom d-flex align-items-center justify-content-between">
+            <label class="form-check-label d-flex align-items-center">
+                <input type="checkbox" class="form-check-input me-2" id="useLocation">
+                <i class="bi bi-geo-alt"></i>
+                <small class="ms-2">Use my location</small>
+            </label>
+
+            <div class="popular-searches">
+                <a href="{{ url_for('main.search', q='Electronics') }}" class="chip">Electronics</a>
+                <a href="{{ url_for('main.search', q='Fashion') }}" class="chip">Fashion</a>
+                <a href="{{ url_for('main.search', q='Groceries') }}" class="chip">Groceries</a>
+                <a href="{{ url_for('main.search', q='Local Shops') }}" class="chip">Local Shops</a>
+            </div>
+        </div>
+    </form>
+</div>
 
 <style>
 .search-container {
@@ -35,6 +74,28 @@
     max-height: 300px;
     overflow-y: auto;
     display: none;
+}
+
+.suggestion-item.active,
+.suggestion-item:focus {
+    background-color: #e9f2ff;
+    outline: none;
+}
+
+.suggestion-loading {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-left-color: #007bff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .suggestion-item {
@@ -96,97 +157,207 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchContainers = document.querySelectorAll('.search-container');
-    
+
     searchContainers.forEach(container => {
         const searchInput = container.querySelector('.search-input');
         const suggestionsContainer = container.querySelector('.search-suggestions');
-        let debounceTimeout;
+        let debounceTimer = null;
+        let controller = null; // For aborting previous fetches
+
+        function clearSuggestions() {
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
+        }
+
+        function renderSuggestions(list) {
+            suggestionsContainer.innerHTML = '';
+            list.forEach(suggestion => {
+                const item = document.createElement('a');
+                item.className = 'suggestion-item';
+                item.href = suggestion.url || '#';
+                item.setAttribute('role', 'option');
+                item.tabIndex = -1;
+
+                const icon = suggestion.type === 'product' ? 'box' : 'shop';
+                const metadata = suggestion.type === 'product'
+                    ? `${suggestion.category || 'Uncategorized'} · ৳${(suggestion.price||0).toFixed(2)}`
+                    : 'Shop';
+
+                item.innerHTML = `
+                    <i class="bi bi-${icon} suggestion-icon" aria-hidden="true"></i>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">${suggestion.name}</div>
+                        <div class="suggestion-metadata">${metadata}</div>
+                    </div>
+                `;
+
+                // click/tap handler
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (item.href && item.href !== '#') window.location.href = item.href;
+                });
+
+                suggestionsContainer.appendChild(item);
+            });
+
+            if (list.length > 0) {
+                suggestionsContainer.style.display = 'block';
+                suggestionsContainer.setAttribute('role', 'listbox');
+            } else {
+                clearSuggestions();
+            }
+        }
+
+        function showLoading() {
+            suggestionsContainer.innerHTML = '<div class="px-3 py-2">Searching <span class="suggestion-loading" aria-hidden="true"></span></div>';
+            suggestionsContainer.style.display = 'block';
+        }
 
         searchInput.addEventListener('input', function() {
-            clearTimeout(debounceTimeout);
-            const query = this.value.trim();
-            
-            if (query.length < 2) {
-                suggestionsContainer.style.display = 'none';
+            const q = this.value.trim();
+            if (debounceTimer) clearTimeout(debounceTimer);
+
+            if (q.length < 2) {
+                if (controller) controller.abort();
+                clearSuggestions();
                 return;
             }
 
-            debounceTimeout = setTimeout(() => {
+            debounceTimer = setTimeout(() => {
+                if (controller) controller.abort();
+                controller = new AbortController();
+                const signal = controller.signal;
+
                 const shopId = container.closest('form').querySelector('input[name="shop_id"]')?.value;
-                const url = new URL('/api/search/suggestions', window.location.origin);
-                url.searchParams.append('q', query);
-                if (shopId) url.searchParams.append('shop_id', shopId);
+                const params = new URLSearchParams({ q });
+                if (shopId) params.append('shop_id', shopId);
 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(suggestions => {
-                        suggestionsContainer.innerHTML = '';
-                        
-                        if (suggestions.length > 0) {
-                            suggestions.forEach(suggestion => {
-                                const item = document.createElement('a');
-                                item.className = 'suggestion-item';
-                                item.href = suggestion.url;
+                showLoading();
 
-                                const icon = suggestion.type === 'product' ? 'box' : 'shop';
-                                const metadata = suggestion.type === 'product' 
-                                    ? `${suggestion.category || 'Uncategorized'} · ৳${suggestion.price.toFixed(2)}`
-                                    : 'Shop';
-
-                                item.innerHTML = `
-                                    <i class="bi bi-${icon} suggestion-icon"></i>
-                                    <div class="suggestion-content">
-                                        <div class="suggestion-title">${suggestion.name}</div>
-                                        <div class="suggestion-metadata">${metadata}</div>
-                                    </div>
-                                `;
-
-                                suggestionsContainer.appendChild(item);
-                            });
-                            suggestionsContainer.style.display = 'block';
-                        } else {
-                            suggestionsContainer.style.display = 'none';
-                        }
+                fetch(`/api/search/suggestions?${params.toString()}`, { signal })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        return res.json();
+                    })
+                    .then(data => renderSuggestions(data || []))
+                    .catch(err => {
+                        if (err.name === 'AbortError') return;
+                        console.error('Search suggestions error:', err);
+                        clearSuggestions();
                     });
-            }, 300);
+            }, 250);
         });
 
-        // Hide suggestions when clicking outside
+        // Close suggestions when clicking outside
         document.addEventListener('click', function(e) {
-            if (!container.contains(e.target)) {
-                suggestionsContainer.style.display = 'none';
-            }
+            if (!container.contains(e.target)) clearSuggestions();
         });
 
-        // Handle keyboard navigation
+        // Keyboard navigation with roving tabindex
         searchInput.addEventListener('keydown', function(e) {
             const items = suggestionsContainer.querySelectorAll('.suggestion-item');
-            const current = suggestionsContainer.querySelector('.suggestion-item.active');
-            
             if (items.length === 0) return;
-            
+
+            const active = suggestionsContainer.querySelector('.suggestion-item.active');
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                
-                if (!current) {
-                    items[e.key === 'ArrowDown' ? 0 : items.length - 1].classList.add('active');
+                if (!active) {
+                    const idx = e.key === 'ArrowDown' ? 0 : items.length - 1;
+                    items[idx].classList.add('active');
+                    items[idx].focus();
                 } else {
-                    const currentIndex = Array.from(items).indexOf(current);
-                    current.classList.remove('active');
-                    
-                    let nextIndex;
-                    if (e.key === 'ArrowDown') {
-                        nextIndex = currentIndex + 1 >= items.length ? 0 : currentIndex + 1;
-                    } else {
-                        nextIndex = currentIndex - 1 < 0 ? items.length - 1 : currentIndex - 1;
-                    }
-                    
+                    const currentIndex = Array.from(items).indexOf(active);
+                    active.classList.remove('active');
+                    let nextIndex = currentIndex + (e.key === 'ArrowDown' ? 1 : -1);
+                    if (nextIndex < 0) nextIndex = items.length - 1;
+                    if (nextIndex >= items.length) nextIndex = 0;
                     items[nextIndex].classList.add('active');
+                    items[nextIndex].focus();
                 }
-            } else if (e.key === 'Enter' && current) {
-                e.preventDefault();
-                window.location.href = current.href;
+            } else if (e.key === 'Enter') {
+                const first = suggestionsContainer.querySelector('.suggestion-item.active') || suggestionsContainer.querySelector('.suggestion-item');
+                if (first) {
+                    e.preventDefault();
+                    first.click();
+                }
+            } else if (e.key === 'Escape') {
+                clearSuggestions();
             }
+        });
+    });
+});
+</script>
+
+<style>
+/* Panel styles to match provided mockup */
+.search-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.15));
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    color: #f1f1f1;
+}
+.search-panel .search-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.search-tab {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #ddd;
+    padding: 6px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.search-tab[aria-pressed="true"] {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border-color: rgba(255,255,255,0.14);
+}
+.search-inner { margin-bottom: 12px; }
+.search-panel .form-control.search-input {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 8px 0 0 8px;
+}
+.btn-search {
+    background: #8a3ffc; /* purple */
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 0 8px 8px 0;
+}
+.popular-searches .chip {
+    display: inline-block;
+    background: rgba(255,255,255,0.04);
+    color: #ddd;
+    padding: 6px 10px;
+    border-radius: 999px;
+    margin-left: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+.search-bottom { margin-top: 8px; }
+</style>
+
+<script>
+// Tabs handler: switch search type and set hidden input
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.search-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const type = this.getAttribute('data-search-type');
+            tabs.forEach(t => t.setAttribute('aria-pressed','false'));
+            this.setAttribute('aria-pressed','true');
+            const form = this.closest('form');
+            const typeInput = form.querySelector('input[name="type"]');
+            if (typeInput) typeInput.value = type;
         });
     });
 });
