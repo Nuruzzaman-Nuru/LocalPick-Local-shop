@@ -252,10 +252,17 @@ def update_order_status(order_id):
         new_status = request.form.get('status')
         notes = request.form.get('notes', '')
     
+    if not new_status:
+        return jsonify({
+            'status': 'error',
+            'message': 'New status is required'
+        }), 400
+
     old_status = order.status
     
     try:
-        if order.update_status(new_status):
+        # First validate if the transition is allowed
+        if order.update_status(new_status, current_user.id):  # Pass user_id for audit trail
             if notes:
                 # Add status change note
                 new_note = OrderNote(
@@ -264,8 +271,6 @@ def update_order_status(order_id):
                     content=f"Status updated to {new_status}: {notes}"
                 )
                 db.session.add(new_note)
-            
-            db.session.commit()
             
             # Send notifications based on status change
             if new_status == 'confirmed':
@@ -277,12 +282,12 @@ def update_order_status(order_id):
                     'action': 'order_confirmed',
                     'shop_name': order.shop.name
                 })
-                
-            elif new_status == 'preparing':
-                # When shop starts preparing the order
+            
+            elif new_status == 'processing':
+                # When shop starts processing the order
                 notify_customer_order_status(order)  # Update customer
                 
-            elif new_status == 'ready_for_delivery':
+            elif new_status == 'delivering':
                 # When order is ready for pickup
                 notify_admin_order_status(order, {   # Notify admin to assign delivery
                     'old': old_status,
@@ -303,21 +308,25 @@ def update_order_status(order_id):
                     'reason': notes
                 })
             
+            db.session.commit()
+            
             return jsonify({
                 'status': 'success',
                 'message': f'Order status updated to {new_status}'
             })
             
     except ValueError as e:
+        current_app.logger.warning(f'Invalid status transition attempted: {str(e)}')
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f'Error updating order status: {str(e)}')
         return jsonify({
             'status': 'error',
-            'message': 'An error occurred while updating order status'
+            'message': 'An error occurred while updating order status. Please try again.'
         }), 500
 
 @shop_bp.route('/order/<int:order_id>/notes', methods=['POST'])

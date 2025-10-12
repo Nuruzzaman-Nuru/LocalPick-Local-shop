@@ -17,7 +17,18 @@
                             <tbody>
                                 {% for item in cart_items %}
                                 <tr>
-                                    <td>{{ item.product.name }} x {{ item.quantity }}</td>
+                                    <td class="d-flex align-items-center">
+                                            {% if item.product.image_url %}
+                                            <img src="{{ url_for('static', filename='images/products/' + item.product.image_url) }}" alt="{{ item.product.name }}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;margin-right:12px;" />
+                                            {% elif item.product.images and item.product.images[0] %}
+                                            <img src="{{ url_for('static', filename='uploads/' + item.product.images[0].filename) }}" alt="{{ item.product.name }}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;margin-right:12px;" />
+                                            {% else %}
+                                            <img src="https://via.placeholder.com/48?text=No" alt="No image" style="width:48px;height:48px;object-fit:cover;border-radius:4px;margin-right:12px;" />
+                                            {% endif %}
+                                        <div>
+                                            {{ item.product.name }} x {{ item.quantity }}
+                                        </div>
+                                    </td>
                                     <td class="text-end">৳{{ "%.2f"|format(item.price * item.quantity) }}</td>
                                 </tr>
                                 {% endfor %}

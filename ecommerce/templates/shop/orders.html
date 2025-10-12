@@ -21,6 +21,10 @@
                class="btn {{ 'btn-info' if current_status == 'confirmed' else 'btn-outline-info' }}">
                 Confirmed ({{ status_counts['confirmed'] }})
             </a>
+            <a href="{{ url_for('shop.orders', status='processing', q=search_query, sort=current_sort) }}" 
+               class="btn {{ 'btn-secondary' if current_status == 'processing' else 'btn-outline-secondary' }}">
+                Processing ({{ status_counts['processing'] }})
+            </a>
             <a href="{{ url_for('shop.orders', status='delivering', q=search_query, sort=current_sort) }}" 
                class="btn {{ 'btn-primary' if current_status == 'delivering' else 'btn-outline-primary' }}">
                 Delivering ({{ status_counts['delivering'] }})
@@ -102,6 +106,7 @@
                                         <span class="badge bg-{{ {
                                             'pending': 'warning',
                                             'confirmed': 'info',
+                                            'processing': 'secondary',
                                             'delivering': 'primary',
                                             'completed': 'success',
                                             'cancelled': 'danger'
@@ -122,9 +127,21 @@
                                                         data-status="confirmed">
                                                     <i class="bi bi-check-circle"></i> Confirm
                                                 </button>
+                                            {% elif order.status == 'confirmed' %}
+                                                <button class="btn btn-sm btn-outline-secondary update-status"
+                                                        data-order-id="{{ order.id }}"
+                                                        data-status="processing">
+                                                    <i class="bi bi-gear"></i> Start Processing
+                                                </button>
+                                            {% elif order.status == 'processing' %}
+                                                <button class="btn btn-sm btn-outline-primary update-status"
+                                                        data-order-id="{{ order.id }}"
+                                                        data-status="delivering">
+                                                    <i class="bi bi-truck"></i> Ready for Delivery
+                                                </button>
                                             {% endif %}
                                             {% if order.status == 'delivering' %}
-                                                <a href="{{ url_for('shop.track_order', order_id=order.id) }}"
+                                                <a href="{{ url_for('user.track_order', order_id=order.id) }}"
                                                    class="btn btn-sm btn-outline-info">
                                                     <i class="bi bi-geo-alt"></i> Track
                                                 </a>
@@ -211,7 +228,52 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             orderToUpdate = this.dataset.orderId;
             newStatus = this.dataset.status;
-            new bootstrap.Modal(document.getElementById('updateStatusModal')).show();
+            
+            // Update modal content based on status
+            const modal = document.getElementById('updateStatusModal');
+            const title = modal.querySelector('.modal-title');
+            const body = modal.querySelector('.modal-body');
+            const confirmBtn = document.getElementById('confirmStatusUpdate');
+            
+            switch(newStatus) {
+                case 'confirmed':
+                    title.textContent = 'Confirm Order';
+                    body.innerHTML = `
+                        <p>Are you sure you want to confirm this order?</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Once confirmed, you'll need to process the order before it's ready for delivery.
+                        </div>`;
+                    confirmBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Order';
+                    confirmBtn.className = 'btn btn-success';
+                    break;
+                    
+                case 'processing':
+                    title.textContent = 'Start Processing Order';
+                    body.innerHTML = `
+                        <p>Are you sure you want to start processing this order?</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Mark the order as processing when you begin preparing the items.
+                        </div>`;
+                    confirmBtn.innerHTML = '<i class="bi bi-gear"></i> Start Processing';
+                    confirmBtn.className = 'btn btn-secondary';
+                    break;
+                    
+                case 'delivering':
+                    title.textContent = 'Mark Ready for Delivery';
+                    body.innerHTML = `
+                        <p>Is this order ready for delivery?</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Once marked as ready, delivery personnel in the area will be notified.
+                        </div>`;
+                    confirmBtn.innerHTML = '<i class="bi bi-truck"></i> Ready for Delivery';
+                    confirmBtn.className = 'btn btn-primary';
+                    break;
+            }
+            
+            new bootstrap.Modal(modal).show();
         });
     });
 

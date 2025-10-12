@@ -42,15 +42,23 @@ class Order(db.Model):
     def update_status(self, new_status, user_id=None):
         """Update order status with proper validation and side effects"""
         valid_transitions = {
-            'pending': ['confirmed', 'cancelled'],
+            'pending': ['processing', 'confirmed', 'cancelled'],
+            'processing': ['confirmed', 'cancelled'],
             'confirmed': ['delivering', 'cancelled'],
             'delivering': ['completed', 'cancelled'],
             'completed': [],  # Final state
             'cancelled': []   # Final state
         }
         
+        # Validate the transition
         if new_status not in valid_transitions.get(self.status, []):
-            raise ValueError(f'Invalid status transition from {self.status} to {new_status}')
+            valid_next_states = valid_transitions.get(self.status, [])
+            error_msg = f'Cannot change status from {self.status} to {new_status}. '
+            if valid_next_states:
+                error_msg += f'Valid next states are: {", ".join(valid_next_states)}'
+            else:
+                error_msg += f'Order is in a final state ({self.status})'
+            raise ValueError(error_msg)
         
         old_status = self.status
         self.status = new_status
@@ -70,6 +78,9 @@ class Order(db.Model):
             from ..utils.notifications import estimate_delivery_time
             minutes = estimate_delivery_time(self)
             self.estimated_delivery_time = datetime.utcnow() + timedelta(minutes=minutes)
+        elif new_status == 'cancelled':
+            # Clear the delivery time if cancelled
+            self.estimated_delivery_time = None
         
         return True
 

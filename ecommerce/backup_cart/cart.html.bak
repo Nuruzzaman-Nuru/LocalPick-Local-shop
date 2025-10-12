@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart (BACKUP){% endblock %}
+
+{% block content %}
+<pre>
+Backup of original cart.html
+
+If you need to restore this file, copy it back to ecommerce/templates/main/cart.html
+</pre>
+{% endblock %}
