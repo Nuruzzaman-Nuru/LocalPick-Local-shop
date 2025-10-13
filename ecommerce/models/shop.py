@@ -89,7 +89,7 @@ class Product(db.Model):
     max_discount_percentage = db.Column(db.Float, default=20.0)  # Maximum allowed discount
     continue_iteration = db.Column(db.Boolean, default=False)  # Whether to continue negotiation after max discount
 
-    def __init__(self, name, description, price, stock, shop_id, min_price=None, max_discount_percentage=20.0, image_url=None, continue_iteration=False, category=None):
+    def __init__(self, name, description, price, stock, shop_id, min_price=None, max_discount_percentage=20.0, continue_iteration=False, category=None):
         self.name = name
         self.description = description
         self.price = price
@@ -97,7 +97,6 @@ class Product(db.Model):
         self.shop_id = shop_id
         self.min_price = min_price
         self.max_discount_percentage = max_discount_percentage
-        self.image_url = image_url
         self.continue_iteration = continue_iteration
         self.category = category
 

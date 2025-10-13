@@ -4,12 +4,29 @@
 
 {% block content %}
 <style>
+.product-thumbnail-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .product-thumbnail {
     width: 50px;
     height: 50px;
     object-fit: cover;
     border-radius: 4px;
     border: 1px solid #ddd;
+}
+
+.image-count {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: bold;
 }
 </style>
 <div class="row mb-4">
@@ -84,15 +101,19 @@
                                 {% for product in shop.products %}
                                     <tr>
                                         <td>
-                                            {% if product.images %}
-                                                <img src="{{ url_for('static', filename='uploads/' + product.images[0].filename) }}" 
-                                                     alt="{{ product.name }}" 
-                                                     class="product-thumbnail">
-                                            {% else %}
-                                                <img src="{{ url_for('static', filename='images/payment.jpg') }}" 
-                                                     alt="{{ product.name }}" 
-                                                     class="product-thumbnail">
+                                            {% set img_src = None %}
+                                            {% if product.images and product.images|length > 0 %}
+                                                {% set img_src = url_for('static', filename='uploads/' + product.images[0].filename) %}
                                             {% endif %}
+                                            <div class="product-thumbnail-wrapper">
+                                                <img src="{{ img_src or url_for('static', filename='images/payment.jpg') }}" 
+                                                     alt="{{ product.name }}" 
+                                                     class="product-thumbnail"
+                                                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/payment.jpg') }}'">
+                                                {% if product.images and product.images|length > 1 %}
+                                                    <span class="image-count">+{{ product.images|length - 1 }}</span>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>{{ product.name }}</td>
                                         <td>${{ "%.2f"|format(product.price) }}</td>
