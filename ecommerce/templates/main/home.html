@@ -226,70 +226,223 @@ content %}
 </div>
 
 <!-- Features Section -->
-<section class="features py-5">
-  <div class="container">
-    <h2 class="text-center mb-5 display-4">Why Choose QuickShop?</h2>
-    <div class="row g-4 px-4">
-      <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-shop display-4 text-primary mb-3"></i>
-            <h3 class="h4">Local Shop Discovery</h3>
-            <p class="text-muted">
-              Find the best local shops near you with real-time inventory.
-            </p>
-          </div>
+<section class="why-choose-section">
+    <div class="container">
+        <h2 class="section-title">Why Choose QuickShop?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon-circle">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <h3>Local Shop Discovery</h3>
+                <p>Find the best local shops near you with real-time inventory.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-circle">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <h3>Negotiation</h3>
+                <p>AI-Powered Bot for Price Negotiation</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-circle">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <h3>Quick Delivery</h3>
+                <p>Get your purchases delivered fast and track them in real-time.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-circle">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <h3>Shop Management</h3>
+                <p>Easily manage your shop, products, and orders with our powerful tools.</p>
+            </div>
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-tags display-4 text-primary mb-3"></i>
-            <h3 class="h4">Negotiation</h3>
-            <p class="text-muted">AI-Powered Bot for Price Negotiation</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-truck display-4 text-primary mb-3"></i>
-            <h3 class="h4">Quick Delivery</h3>
-            <p class="text-muted">
-              Get your purchases delivered fast and track them in real-time.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-gear display-4 text-primary mb-3"></i>
-            <h3 class="h4">Shop Management</h3>
-            <p class="text-muted">
-              Easily manage your shop, products, and orders with our powerful
-              tools.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 </section>
 
+<style>
+.why-choose-section {
+    padding: 5rem 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.why-choose-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('{{ url_for('static', filename='images/br.png') }}');
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.8rem;
+    font-weight: 600;
+    color: #101828;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #0066FF 0%, #5B86E5 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-circle i {
+    font-size: 32px;
+    color: white;
+}
+
+.feature-card h3 {
+    font-size: 1.4rem;
+    color: #101828;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature-card p {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2.2rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+    
+    .feature-card {
+        padding: 1.5rem;
+    }
+}
+</style>
+
 <!-- CTA Section -->
-<section class="cta-section py-5 bg-light">
-  <div class="container text-center">
-    <h2 class="display-4 mb-3">Join QuickShop Today!</h2>
-    <p class="lead mb-4">
-      Experience the future of online shopping with QuickShop. Sign up now
-      and start exploring!
-    </p>
-    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
-      Get Started
-    </a>
-  </div>
+<section class="join-section">
+    <div class="container">
+        <div class="join-content">
+            <h2>Join QuickShop Today!</h2>
+            <p>Experience the future of online shopping with QuickShop. Sign up now and start exploring!</p>
+            <a href="{{ url_for('auth.register') }}" class="join-button">Get Started <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
 </section>
+
+<style>
+.join-section {
+    position: relative;
+    padding: 6rem 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{{ url_for('static', filename='images/join-bg.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+    text-align: center;
+}
+
+.join-content {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.join-section h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #0066FF, #5B86E5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.join-section p {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.join-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #0066FF 0%, #5B86E5 100%);
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.join-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .join-section {
+        padding: 4rem 0;
+    }
+    
+    .join-section h2 {
+        font-size: 2.2rem;
+    }
+    
+    .join-section p {
+        font-size: 1.1rem;
+    }
+    
+    .join-button {
+        padding: 0.8rem 1.6rem;
+        font-size: 1rem;
+    }
+}
+</style>
 
 <!-- Featured Products Section -->
 <section class="featured-products py-5 bg-light">
