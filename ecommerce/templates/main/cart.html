@@ -265,7 +265,16 @@ function updateCart() {
                         const itemSubtotal = item.subtotal || 0;
                         subtotal += isNaN(itemSubtotal) ? 0 : itemSubtotal;
                         const displayPrice = item.negotiated_price || item.price || 0;
-                        const imgSrc = item.image_url ? (item.image_url.startsWith('http') ? item.image_url : '/static/images/products/' + item.image_url) : 'https://via.placeholder.com/80?text=No+Image';
+                        let imgSrc = 'https://via.placeholder.com/80?text=No+Image';
+                        if (item.image_url) {
+                            if (item.image_url.startsWith('http') || item.image_url.startsWith('/')) {
+                                imgSrc = item.image_url;
+                            } else {
+                                // Prefer uploads folder (saved by uploader), fallback to images/products
+                                imgSrc = '/static/uploads/' + item.image_url;
+                                // Note: if uploads file doesn't exist, browser will fallback via onerror to placeholder
+                            }
+                        }
 
                         html += `
                             <div class="cart-item border-top pt-3">
