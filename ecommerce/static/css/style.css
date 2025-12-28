@@ -83,9 +83,16 @@ main {
     background: linear-gradient(to right, #1e1f32, #3a3f67);
     padding: 0.8rem 0;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 1000;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+}
+
+/* Offset page content for fixed navbar height */
+body {
+    padding-top: 76px;
 }
 
 .navbar .container {
@@ -509,6 +516,84 @@ main {
 /* Admin specific styles */
 .bg-purple {
     background-color: #8B5CF6 !important;
+}
+
+.admin-dashboard {
+    background: #f8fafc;
+}
+
+.shop-dashboard-layout {
+    background: #f8fafc;
+}
+
+.feature-nav .list-group-item {
+    border: none;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    padding: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.feature-nav .list-group-item:hover {
+    background: #f5f7fb;
+    transform: translateX(4px);
+}
+
+.stats-grid .stat-card {
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.gradient-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.gradient-green { background: linear-gradient(135deg, #16a34a, #0d8a3c); }
+.gradient-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.gradient-amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.gradient-cyan { background: linear-gradient(135deg, #06b6d4, #0284c7); }
+
+.stat-card .btn {
+    border-radius: 10px;
+}
+
+.feature-column {
+    min-width: 260px;
+    max-width: 300px;
+}
+
+.feature-nav {
+    border: 1px solid #e9eef5;
+    border-radius: 14px;
+    min-height: calc(100vh - 180px);
+}
+
+.feature-nav .list-group-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.85rem 0.9rem;
+}
+
+.feature-nav .list-group-item small {
+    display: block;
+    line-height: 1.25;
+}
+
+@media (max-width: 991.98px) {
+    .feature-nav {
+        position: sticky;
+        top: 80px;
+    }
+    .feature-column {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .feature-nav {
+        position: sticky;
+        top: 80px;
+    }
 }
 
 .admin-controls {
