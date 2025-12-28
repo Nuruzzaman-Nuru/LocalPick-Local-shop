@@ -1,5 +1,4 @@
-
-# QuickShop: A Web Application for Local Shop Support”
+# LocalPick: A Web Application for Local Shop Support"
 A comprehensive e-commerce solution featuring role-based access control, smart price negotiations, and real-time delivery tracking.
 
 ## Features
@@ -37,15 +36,15 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
 - **Backend**
   - Python
   - Flask
-  # QuickShop: A Web Application for Local Shop Support
+  # LocalPick: A Web Application for Local Shop Support
   A comprehensive e-commerce solution featuring role-based access control, smart price negotiations, and real-time delivery tracking.
 
-  Repository: https://github.com/Nuruzzaman-Nuru/QuickShop
+  Repository: https://github.com/Nuruzzaman-Nuru/LocalPick
 
   Clone with PowerShell:
   ```powershell
-  git clone https://github.com/Nuruzzaman-Nuru/QuickShop.git
-  cd QuickShop
+  git clone https://github.com/Nuruzzaman-Nuru/LocalPick.git
+  cd LocalPick
   ```
 
   ## Features

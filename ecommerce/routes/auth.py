@@ -133,22 +133,12 @@ def register():
             db.session.add(user)
             db.session.commit()
 
-            # Clear any existing messages before showing success
-            session.pop('_flashes', None)
-            
-            # Generate confirmation message with user details
-            confirmation_msg = f"""
-            <div class='registration-details'>
-                <h4>Registration Successful!</h4>
-                <div class='info-box p-3 bg-light rounded'>
-                    <p><strong>User ID:</strong> #{user.id}</p>
-                    <p><strong>Username:</strong> {user.username}</p>
-                    <p><strong>Password:</strong> {password}</p>
-                </div>
-                <p class='mt-3'><strong>Please save these details for future reference.</strong></p>
-                <p class='text-muted'>You can log in using these credentials below.</p>
-            </div>"""
-            flash(confirmation_msg, 'success')
+            # Store user details in session for display
+            session['registration_success'] = {
+                'user_id': user.id,
+                'username': user.username,
+                'password': password
+            }
             
             # Store user ID in session for the login form
             session['registered_user_id'] = user.id
@@ -190,6 +180,10 @@ def login():
         if not user or not user.check_password(password):
             flash('Invalid User ID/username or password.', 'error')
             return render_template('auth/login.html')
+            
+        # Clear registration success data from session
+        session.pop('registration_success', None)
+        session.pop('registered_user_id', None)
             
         login_user(user, remember=remember)
         next_page = request.args.get('next')

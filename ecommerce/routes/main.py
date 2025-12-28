@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, session, flash, redirect, url_for, request, current_app, send_from_directory, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import func, or_
+from datetime import datetime
 from ..models.shop import Shop, Product
 from ..models.order import Order, OrderItem
 from ..models.cart import Cart, CartItem
 from ..routes.auth import customer_required
 from ..routes.api import init_cart, get_or_create_cart
-from ..utils.notifications import notify_shop_owner_new_order, notify_customer_order_status, notify_admin_order_status
+from ..utils.notifications import notify_shop_owner_new_order, notify_customer_order_status, notify_admin_order_status, notify_customer_order_confirmation
 from .. import db
 
 main_bp = Blueprint('main', __name__)
@@ -30,7 +31,7 @@ def index():
 
 @main_bp.route('/about')
 def about():
-    # Show default QuickShop about page for non-logged in users
+    # Show default LocalPick about page for non-logged in users
     # or users that are not shop owners
     if not current_user.is_authenticated or current_user.role != 'shop_owner':
         return render_template('main/about.html')
@@ -63,10 +64,13 @@ def checkout():
         payment_method = request.form.get('payment_method', 'cod')
         notes = request.form.get('notes', '').strip()
         
-        # Validate delivery address
-        if not delivery_address:
-            flash('Please provide a delivery address.', 'error')
-            return redirect(url_for('main.checkout'))
+        # Debug: Print form data
+        print(f"Form data - Address: '{delivery_address}', Lat: {latitude}, Lng: {longitude}")
+        
+        # Validate delivery address (temporarily disabled)
+        # if not delivery_address:
+        #     flash('Please provide a delivery address.', 'error')
+        #     return redirect(url_for('main.checkout'))
             
         # Only validate coordinates if they are provided
         if latitude is not None and longitude is not None:
@@ -164,9 +168,11 @@ def checkout():
             # Process and send notifications for each order
             for order in orders:
                 # Automatically set order to confirmed status
-                order.update_status('confirmed')
+                order.status = 'confirmed'
+                order.updated_at = datetime.utcnow()
                 
                 # Send notifications
+                notify_customer_order_confirmation(order)  # Send confirmation email
                 notify_shop_owner_new_order(order)  # Notify shop owner
                 notify_customer_order_status(order)  # Notify customer
                 

@@ -369,6 +369,10 @@ function showSuccessMessage(message) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     document.querySelector('.card').insertAdjacentElement('beforebegin', alert);
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 3000);
 }
 
 function showErrorMessage(message) {

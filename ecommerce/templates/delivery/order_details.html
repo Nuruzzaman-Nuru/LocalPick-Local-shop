@@ -184,25 +184,26 @@ function markDelivered() {
         return;
     }
 
-    fetch(`/api/order/{{ order.id }}/mark-delivered`, {
+    fetch(`/delivery/delivery/{{ order.id }}/update-status`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
+        },
+        body: JSON.stringify({ status: 'completed' })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            showSuccessMessage('Order marked as delivered');
-            setTimeout(() => window.location.reload(), 1500);
+        if (data.status === 'success') {
+            alert('Order marked as delivered successfully!');
+            window.location.reload();
         } else {
-            throw new Error(data.error || 'Failed to mark order as delivered');
+            alert(data.message || 'Failed to mark order as delivered');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showErrorMessage(error.message);
+        alert('Failed to mark order as delivered');
     });
 }
 </script>

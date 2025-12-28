@@ -66,7 +66,7 @@
                             <td class="text-end">
                                 <button type="button" 
                                         class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}"
-                                        onclick="toggleUserStatus({{ user.id }}, '{{ user.username }}')"
+                                        onclick="toggleUserStatus({{ user.id }}, &quot;{{ user.username }}&quot;)"
                                         title="{{ 'Deactivate' if user.is_active else 'Activate' }} user">
                                     <i class="bi bi-{{ 'slash-circle' if user.is_active else 'check-circle' }}"></i>
                                     {{ 'Deactivate' if user.is_active else 'Activate' }}

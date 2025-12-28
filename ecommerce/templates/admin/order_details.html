@@ -131,135 +131,36 @@
                     </div>
                     {% endif %}
 
-                    {% if order.status == 'pending' and not order.delivery_person %}
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Assign Delivery</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="assignDeliveryForm">
-                                <div class="form-group">
-                                    <select class="form-select" name="delivery_id" required>
-                                        <option value="">Select Delivery Person</option>
-                                        {% for person in available_delivery %}
-                                            <option value="{{ person.id }}">{{ person.name }} ({{ person.phone }})</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary mt-3">Assign Delivery</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <script>
-                    document.getElementById('assignDeliveryForm').addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        const formData = new FormData(this);
-                        
-                        fetch('/admin/order/{{ order.id }}/assign-delivery', {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                window.location.reload();
-                            } else {
-                                alert(data.error || 'Failed to assign delivery');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Failed to assign delivery');
-                        });
-                    });
-                    </script>
-                    {% endif %}
-
+                    {% if order.status == 'confirmed' and not order.delivery_person %}
                     <div class="mb-4">
-                        <h5>Delivery Assignment</h5>
-                        {% if not order.delivery_person and order.status in ['pending', 'confirmed'] %}
-                            <form id="assignDeliveryForm" class="mt-3">
-                                <div class="form-group mb-3">
-                                    <label for="deliveryPerson">Select Delivery Person:</label>
-                                    <select class="form-select" id="deliveryPerson" name="delivery_id" required>
-                                        <option value="">Choose a delivery person...</option>
-                                        {% for person in available_delivery %}
-                                            <option value="{{ person.id }}">
-                                                {{ person.name }} - {{ person.phone }}
-                                                {% if person.current_location %}
-                                                    ({{ "%.2f"|format(person.current_location.distance) }} km away)
-                                                {% endif %}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Assign Delivery</button>
-                            </form>
-                        {% elif order.delivery_person %}
+                        <h5>Assign Delivery Person</h5>
+                        <form id="assignDeliveryForm">
+                            <div class="form-group mb-3">
+                                <select class="form-select" name="delivery_id" required>
+                                    <option value="">Choose a delivery person...</option>
+                                    {% for person in available_delivery %}
+                                        <option value="{{ person.id }}">
+                                            {{ person.username }} - {{ person.phone or 'No phone' }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Assign Delivery</button>
+                        </form>
+                    </div>
+                    {% elif order.delivery_person %}
+                        <div class="mb-4">
+                            <h5>Delivery Assignment</h5>
                             <div class="card bg-light">
                                 <div class="card-body">
-                                    <h6>Assigned Delivery Person:</h6>
-                                    <p><strong>Name:</strong> {{ order.delivery_person.name }}</p>
-                                    <p><strong>Phone:</strong> {{ order.delivery_person.phone }}</p>
+                                    <p><strong>Assigned to:</strong> {{ order.delivery_person.username }}</p>
+                                    <p><strong>Phone:</strong> {{ order.delivery_person.phone or 'No phone' }}</p>
                                     <p><strong>Status:</strong> 
-                                        <span class="badge bg-{{ 'success' if order.status == 'delivering' else 'secondary' }}">
-                                            {{ order.status|title }}
-                                        </span>
+                                        <span class="badge bg-primary">{{ order.status|title }}</span>
                                     </p>
                                 </div>
                             </div>
-                        {% else %}
-                            <p class="text-muted">Order cannot be assigned for delivery at this time.</p>
-                        {% endif %}
-                    </div>
-
-                    <script>
-                    document.getElementById('assignDeliveryForm')?.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        const deliveryId = document.getElementById('deliveryPerson').value;
-                        if (!deliveryId) {
-                            showErrorMessage('Please select a delivery person');
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append('delivery_id', deliveryId);
-                        
-                        fetch('{{ url_for("admin.assign_delivery", order_id=order.id) }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showSuccessMessage('Delivery person assigned successfully');
-                                setTimeout(() => window.location.reload(), 1500);
-                            } else {
-                                throw new Error(data.error || 'Failed to assign delivery person');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showErrorMessage(error.message || 'Failed to assign delivery person');
-                        });
-                    });
-                    </script>
-
-                    {% if not order.delivery_person and order.status == 'confirmed' %}
-                    <div class="mb-4">
-                        <a href="{{ url_for('admin.assign_delivery', order_id=order.id) }}" 
-                           class="btn btn-success">
-                            Assign Delivery Person
-                        </a>
-                    </div>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -320,6 +221,7 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_API_KEY'] }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 15,
         center: { 
@@ -336,6 +238,43 @@ document.addEventListener('DOMContentLoaded', function() {
         map: map,
         title: 'Delivery Location'
     });
+
+    // Handle delivery assignment
+    const assignForm = document.getElementById('assignDeliveryForm');
+    if (assignForm) {
+        assignForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const deliveryId = formData.get('delivery_id');
+            
+            if (!deliveryId) {
+                alert('Please select a delivery person');
+                return;
+            }
+
+            fetch('{{ url_for("admin.assign_delivery", order_id=order.id) }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Delivery person assigned successfully');
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to assign delivery person');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to assign delivery person');
+            });
+        });
+    }
 });
 </script>
 {% endblock %}

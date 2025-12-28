@@ -1,5 +1,8 @@
-// Maps initialization and location handling
+// Mapbox initialization and location handling
+mapboxgl.accessToken = 'pk.eyJ1Ijoic29maXF1bCIsImEiOiJjbWpuOGZpeTQxNmtkM21xeXRiemUyaGVjIn0.8puYOnBgNmo7BGO4S_dpOg';
+
 function initMap() {
+    console.log('Initializing map...');
     const mapDiv = document.getElementById('map');
     const addressInput = document.getElementById('address');
     const latInput = document.getElementById('latitude');
@@ -7,145 +10,105 @@ function initMap() {
     const form = document.querySelector('form');
 
     // If no map or related elements exist, exit gracefully
-    if (!mapDiv || !addressInput) return;
+    if (!mapDiv) {
+        console.log('No map div found');
+        return;
+    }
+    if (!addressInput) {
+        console.log('No address input found');
+        return;
+    }
 
-    // Remove form validation for coordinates        // Form validation - allow submission without coordinates
+    console.log('Map elements found, creating map...');
+
+    try {
+        // Default to Dhaka, Bangladesh coordinates
+        const defaultLocation = [90.4125, 23.8103]; // [lng, lat] for Mapbox
+        
+        // Initialize Mapbox map
+        const map = new mapboxgl.Map({
+            container: mapDiv,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: defaultLocation,
+            zoom: 13,
+            interactive: false
+        });
+
+        console.log('Map created successfully');
+
+        // Add marker
+        const marker = new mapboxgl.Marker({ draggable: true })
+            .setLngLat(defaultLocation)
+            .addTo(map);
+
+        console.log('Marker added');
+
+        // Handle marker drag
+        marker.on('dragend', function() {
+            const lngLat = marker.getLngLat();
+            console.log('Marker dragged to:', lngLat);
+            
+            if (latInput && lngInput) {
+                latInput.value = lngLat.lat;
+                lngInput.value = lngLat.lng;
+            }
+        });
+
+        // Handle address input for geocoding
+        if (addressInput) {
+            let timeout;
+            addressInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    const query = addressInput.value.trim();
+                    if (query.length > 2) {
+                        console.log('Geocoding query:', query);
+                        
+                        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&country=BD`)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Geocoding result:', data);
+                                if (data.features && data.features.length > 0) {
+                                    const feature = data.features[0];
+                                    const [lng, lat] = feature.center;
+                                    
+                                    map.flyTo({ center: [lng, lat], zoom: 15 });
+                                    marker.setLngLat([lng, lat]);
+                                    
+                                    if (latInput && lngInput) {
+                                        latInput.value = lat;
+                                        lngInput.value = lng;
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Geocoding error:', error);
+                            });
+                    }
+                }, 500);
+            });
+        }
+
+        // Form validation - allow submission without coordinates
         if (form) {
             form.addEventListener('submit', function(e) {
-                // Always allow form submission - coordinates are optional
-                if (!latInput.value || !lngInput.value) {
-                    console.log('Submitting without coordinates');
-                }
+                console.log('Form submitting with coordinates:', latInput?.value, lngInput?.value);
                 return true;
             });
-        }// If the page has a map, initialize it with optional functionality
-    if (mapDiv) {
-        // Default to Dhaka, Bangladesh coordinates
-        const defaultLocation = { lat: 23.8103, lng: 90.4125 };
-        
-        // Initialize map even if no coordinates are provided
-        const map = new google.maps.Map(mapDiv, {
-            zoom: 13,
-            center: defaultLocation,
-            mapTypeControl: false,
-            gestureHandling: 'cooperative'
-        });
-
-        const marker = new google.maps.Marker({
-            map: map,
-            position: defaultLocation,
-            draggable: true
-        });
-
-        // Initialize Places Autocomplete if address input exists
-        if (addressInput) {
-            const autocomplete = new google.maps.places.Autocomplete(addressInput);
-            autocomplete.bindTo('bounds', map);            // Handle place selection (optional)
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                
-                // If a valid place is selected, update the map
-                if (place.geometry) {
-                    if (place.geometry.viewport) {
-                        map.fitBounds(place.geometry.viewport);
-                    } else {
-                        map.setCenter(place.geometry.location);
-                        map.setZoom(17);
-                    }
-
-                    marker.setPosition(place.geometry.location);
-                    if (latInput && lngInput) {
-                        latInput.value = place.geometry.location.lat();
-                        lngInput.value = place.geometry.location.lng();
-                    }
-                    addressInput.value = place.formatted_address;
-                } else {
-                    // Still allow manual address entry
-                    console.log('Using manual address entry');
-                }
-            });
         }
 
-        // Handle marker drag if coordinate inputs exist
-        if (latInput && lngInput) {
-            marker.addListener('dragend', function() {
-                const position = marker.getPosition();
-                latInput.value = position.lat();
-                lngInput.value = position.lng();
-                
-                // Update address using reverse geocoding
-                const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({ location: position }, function(results, status) {
-                    if (status === 'OK' && results[0]) {
-                        addressInput.value = results[0].formatted_address;
-                    }
-                });
-            });
-        }
+    } catch (error) {
+        console.error('Error initializing map:', error);
     }
 }
 
-// Location input initialization for other pages
-function initLocationInput() {
-    const useLocationSwitch = document.getElementById('useLocation');
-    const locationFields = document.getElementById('locationFields');
-    const locationInput = document.getElementById('locationInput');
-    const latInput = document.getElementById('lat');
-    const lngInput = document.getElementById('lng');
-
-    if (!useLocationSwitch || !locationFields) return;
-
-    // Initialize Places Autocomplete
-    const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-        types: ['geocode']
-    });
-
-    // Handle place selection
-    autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-            latInput.value = place.geometry.location.lat();
-            lngInput.value = place.geometry.location.lng();
-            document.getElementById('filterForm').submit();
-        }
-    });
-
-    // Handle location switch toggle
-    useLocationSwitch.addEventListener('change', () => {
-        if (useLocationSwitch.checked) {
-            locationFields.style.display = 'flex';
-            // Try to get current location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        latInput.value = position.coords.latitude;
-                        lngInput.value = position.coords.longitude;
-                        // Reverse geocode to show address
-                        const geocoder = new google.maps.Geocoder();
-                        geocoder.geocode({
-                            location: {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            }
-                        }, (results, status) => {
-                            if (status === 'OK' && results[0]) {
-                                locationInput.value = results[0].formatted_address;
-                                document.getElementById('filterForm').submit();
-                            }
-                        });
-                    },
-                    (error) => {
-                        console.error('Geolocation error:', error);
-                        locationFields.style.display = 'flex';
-                    }
-                );
-            }
-        } else {
-            locationFields.style.display = 'none';
-            latInput.value = '';
-            lngInput.value = '';
-            locationInput.value = '';
-            document.getElementById('filterForm').submit();
-        }
-    });
-}
+// Initialize map when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, checking for mapboxgl...');
+    if (typeof mapboxgl !== 'undefined') {
+        console.log('Mapbox GL found, initializing map');
+        initMap();
+    } else {
+        console.error('Mapbox GL not loaded');
+    }
+});

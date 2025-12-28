@@ -1,0 +1,10 @@
+/* Hide Mapbox attribution globally */
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-attrib-inner,
+.mapboxgl-ctrl-bottom-right {
+    display: none !important;
+}
+
+.mapboxgl-ctrl-logo {
+    display: none !important;
+}

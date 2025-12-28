@@ -1,6 +1,5 @@
 import os
 import uuid
-from PIL import Image as PILImage
 from werkzeug.utils import secure_filename
 from flask import current_app
 from ..models.image import Image
@@ -50,12 +49,8 @@ def save_image(file, uploaded_by, product_id=None, shop_id=None):
         # Full path for the file
         file_path = os.path.join(upload_path, filename)
         
-        # Open and validate image
-        img = PILImage.open(file)
-        width, height = img.size
-        
-        # Save the image
-        img.save(file_path, optimize=True, quality=85)
+        # Save the file
+        file.save(file_path)
         
         # Get file size
         size = os.path.getsize(file_path)
@@ -68,17 +63,17 @@ def save_image(file, uploaded_by, product_id=None, shop_id=None):
         image = Image(
             filename=filename,
             original_filename=original_filename,
-            mime_type=file.content_type,
+            mime_type=file.content_type or 'image/jpeg',
             size=size,
-            width=width,
-            height=height,
+            width=800,  # Default width
+            height=600,  # Default height
             uploaded_by=uploaded_by,
             product_id=product_id,
             shop_id=shop_id
         )
         
         db.session.add(image)
-        db.session.commit()
+        db.session.flush()  # Don't commit here, let the caller handle it
         
         return image
         

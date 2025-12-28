@@ -2,6 +2,14 @@
 
 {% block title %}{{ shop.name }}{% endblock %}
 
+{% block head %}
+{{ super() }}
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+<style>
+.mapboxgl-ctrl-attrib { display: none !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row mb-4">
@@ -186,30 +194,29 @@
 {% endblock %}
 
 {% block scripts %}
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
 <script>
-// Define initMap before loading Google Maps
+mapboxgl.accessToken = 'pk.eyJ1Ijoic29maXF1bCIsImEiOiJjbWpuOGZpeTQxNmtkM21xeXRiemUyaGVjIn0.8puYOnBgNmo7BGO4S_dpOg';
+
 let map;
 let currentNegotiationId;
 
 function initMap() {
     try {
-        const shopLocation = {
-            lat: {{ shop.location_lat }},
-            lng: {{ shop.location_lng }}
-        };
+        const shopLocation = [{{ shop.location_lng }}, {{ shop.location_lat }}];
         
-        map = new google.maps.Map(document.getElementById('map'), {
+        map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: shopLocation,
             zoom: 15,
-            center: shopLocation
+            interactive: false
         });
         
-        new google.maps.Marker({
-            position: shopLocation,
-            map: map,
-            title: '{{ shop.name }}'
-        });
+        new mapboxgl.Marker()
+            .setLngLat(shopLocation)
+            .addTo(map);
         
-        // Hide error message if map loads successfully
         document.getElementById('mapError').style.display = 'none';
     } catch (error) {
         console.error('Error initializing map:', error);
@@ -217,53 +224,34 @@ function initMap() {
     }
 }
 
-// Handle Google Maps loading error
-function gm_authFailure() {
-    document.getElementById('mapError').style.display = 'block';
-}
-
-// Load Google Maps with error handling
-function loadGoogleMaps() {
-    const script = document.createElement('script');
-    script.src = "https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap";
-    script.async = true;
-    script.defer = true;
-    script.onerror = function() {
-        document.getElementById('mapError').style.display = 'block';
-    };
-    document.head.appendChild(script);
-}
-
-// Start loading Google Maps
-loadGoogleMaps();
-
-// Helper functions for messages
-function showSuccessMessage(message) {
-    Swal.fire({
-        title: 'Success!',
-        text: message,
-        icon: 'success',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-    });
-}
-
-function showErrorMessage(message) {
-    Swal.fire({
-        title: 'Error!',
-        text: message,
-        icon: 'error',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-    });
-}
-
 document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    
+    // Helper functions for messages
+    function showSuccessMessage(message) {
+        Swal.fire({
+            title: 'Success!',
+            text: message,
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    function showErrorMessage(message) {
+        Swal.fire({
+            title: 'Error!',
+            text: message,
+            icon: 'error',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
     // Add to cart handling
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function() {

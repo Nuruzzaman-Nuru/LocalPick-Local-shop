@@ -1,7 +1,7 @@
 from ecommerce import create_app, db
 from ecommerce.models.user import User
 
-def create_admin_user(username='admin', email='admin@quickshop.com', password='admin123'):
+def create_admin_user(username='admin', email='admin@localpick.com', password='admin123'):
     app = create_app()
     
     with app.app_context():

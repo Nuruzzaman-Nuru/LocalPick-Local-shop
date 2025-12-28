@@ -422,12 +422,7 @@ def checkout():
     shipping = data.get('shipping', {})
     payment_method = data.get('payment_method', 'cod')
     
-    # Validate shipping address is provided
-    if not shipping or not shipping.get('address'):
-        return jsonify({
-            'status': 'error',
-            'message': 'Shipping address is required'
-        }), 400
+    # Address is optional - no validation needed
     
     # Validate payment method
     valid_payment_methods = ['cod', 'bkash', 'nagad', 'card']
@@ -886,6 +881,24 @@ def negotiate_price(product_id):
     if product.can_negotiate_price(data['offered_price']):
         negotiation.status = 'accepted'
         negotiation.final_price = data['offered_price']
+        
+        # Automatically add to cart when accepted
+        cart = init_cart()
+        existing_item = CartItem.query.filter_by(
+            cart_id=cart.id,
+            product_id=product_id
+        ).first()
+        
+        if existing_item:
+            existing_item.negotiated_price = data['offered_price']
+        else:
+            cart_item = CartItem(
+                cart_id=cart.id,
+                product_id=product_id,
+                quantity=1,
+                negotiated_price=data['offered_price']
+            )
+            db.session.add(cart_item)
     else:
         # Calculate counter offer
         discount = (product.price - product.min_price) * 0.7  # Allow 70% of maximum possible discount

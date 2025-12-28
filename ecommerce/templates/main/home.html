@@ -114,7 +114,7 @@ content %}
 <!-- Banner Section -->
 <section class="banner-section">
   <div class="banner-content">
-    <h1>Welcome to our QuickShop</h1>
+    <h1>Welcome to our LocalPick</h1>
     <h2>UP to 40% OFF</h2>
     <p>Up to 40% OFF - Best Deals Online on some Products</p>
     <a href="{{ url_for('auth.register') }}" class="btn">Shop Now</a>
@@ -228,7 +228,7 @@ content %}
 <!-- Features Section -->
 <section class="why-choose-section">
     <div class="container">
-        <h2 class="section-title">Why Choose QuickShop?</h2>
+        <h2 class="section-title">Why Choose LocalPick?</h2>
         <div class="features-grid">
             <div class="feature-card">
                 <div class="icon-circle">
@@ -292,11 +292,12 @@ content %}
 }
 
 .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    position: relative;
-    z-index: 1;
+  display: grid;
+  /* Force 4 columns on large screens to keep the 4 features on a single row */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .feature-card {
@@ -348,7 +349,7 @@ content %}
     }
     
     .features-grid {
-        grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
         padding: 0 1rem;
     }
     
@@ -362,8 +363,8 @@ content %}
 <section class="join-section">
     <div class="container">
         <div class="join-content">
-            <h2>Join QuickShop Today!</h2>
-            <p>Experience the future of online shopping with QuickShop. Sign up now and start exploring!</p>
+            <h2>Join LocalPick Today!</h2>
+            <p>Experience the future of online shopping with LocalPick. Sign up now and start exploring!</p>
             <a href="{{ url_for('auth.register') }}" class="join-button">Get Started <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
@@ -722,103 +723,57 @@ content %}
 </style>
 
 <style>
-  .product-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
+/* Consolidated product-grid adjustments (removed older duplicate flex rules) */
+.featured-products {
+  background: #f6f9ff; /* subtle light background for the whole section */
+}
 
-  .product-card {
-    background: #fff;
-    border-radius: 12px;
-    width: 250px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
+.featured-products .product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  padding: 1rem;
+}
 
-  .product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+.featured-products .product-card {
+  background: #ffffff; /* keep cards white but with a faint border for separation */
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(11, 20, 43, 0.04);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
 
-  .product-card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-  }
+.featured-products .product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(11, 20, 43, 0.08);
+}
 
-  .product-info {
-    padding: 15px;
-  }
+/* Ensure actions/buttons are slightly larger and readable */
+.featured-products .product-actions .btn {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
 
-  .product-info h4 {
-    margin: 5px 0;
-    font-size: 18px;
-    color: #333;
+@media (min-width: 1200px) {
+  /* Keep the why-choose grid aligned with large screens */
+  .features-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
+}
 
-  .product-info p {
-    margin: 4px 0;
-    color: #666;
+@media (max-width: 992px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .price {
-    font-size: 20px;
-    color: #8e24aa;
-    font-weight: bold;
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
   }
+}
 
-  .rating {
-    color: #fbc02d;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px 15px;
-    margin-top: auto;
-  }
-
-.buttons a,
-.buttons button {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease;
-}  .details-btn {
-    background: white;
-    border: 2px solid #8e24aa;
-    color: #8e24aa;
-  }
-
-  .details-btn:hover {
-    background: #8e24aa;
-    color: white;
-  }
-
-  .cart-btn {
-    background: #8e24aa;
-    color: white;
-    border: none;
-  }
-
-  .cart-btn:hover:not([disabled]) {
-    background: #6a1b9a;
-  }
-
-  .cart-btn[disabled] {
-    background: #ccc;
-    cursor: not-allowed;
-  }
 </style>
 
 <script>

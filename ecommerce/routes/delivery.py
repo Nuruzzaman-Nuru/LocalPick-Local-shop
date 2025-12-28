@@ -164,10 +164,15 @@ def update_delivery_status(order_id):
             notify_customer_order_status(order)
             notify_admin_order_status(order)
             
-            return jsonify({
-                'status': 'success',
-                'message': f'Order status updated to {new_status}'
-            })
+            # Check if it's an AJAX request
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Order status updated to {new_status}'
+                })
+            else:
+                flash(f'Order status updated to {new_status}', 'success')
+                return redirect(url_for('delivery.dashboard'))
             
     except ValueError as e:
         return jsonify({
