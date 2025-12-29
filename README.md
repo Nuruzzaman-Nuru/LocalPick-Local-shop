@@ -2,7 +2,6 @@
 A comprehensive e-commerce solution featuring role-based access control, smart price negotiations, and real-time delivery tracking.
 
 ## Features
-![homepage](homepage.jpg)
 - **Multi-Role System**
   - Customer: Browse products, negotiate prices, track orders
   - Shop Owner: Manage inventory, handle orders, customize shop settings
@@ -48,7 +47,6 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
   ```
 
   ## Features
-  ![homepage](indexpage.png)
 >>>>>>> a499526 (new)
   - **Multi-Role System**
     - Customer: Browse products, negotiate prices, track orders
@@ -97,7 +95,6 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
     - SQLite (Development)
     - Supports PostgreSQL (Production)
  
-  ![Home Page](home page.png)
   ## Installation
 
   1. Clone the repository

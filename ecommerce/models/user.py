@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     location_lat = db.Column(db.Float)
     location_lng = db.Column(db.Float)
     address = db.Column(db.String(200))
+    avatar_url = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -71,6 +72,7 @@ class User(UserMixin, db.Model):
             'email': self.email,
             'role': self.role,
             'phone': self.phone,  # Added phone number field to dictionary
+            'avatar_url': self.avatar_url,
             'location': {
                 'lat': self.location_lat,
                 'lng': self.location_lng,

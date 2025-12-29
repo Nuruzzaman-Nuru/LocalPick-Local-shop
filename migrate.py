@@ -14,6 +14,13 @@ def migrate():
         except Exception as e:
             print(f"Error adding email_notifications column (it might already exist): {e}")
 
+        # Add avatar_url column to user table
+        try:
+            conn.execute(text('ALTER TABLE user ADD COLUMN avatar_url VARCHAR(255)'))
+            print("Added avatar_url column to user table")
+        except Exception as e:
+            print(f"Error adding avatar_url column (it might already exist): {e}")
+
         # Add category column to product table
         try:
             conn.execute(text('ALTER TABLE product ADD COLUMN category VARCHAR(50)'))

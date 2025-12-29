@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import generate_csrf
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 from ..models.user import User
 from .. import db
 import secrets
+import os
 from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
@@ -58,6 +60,12 @@ def send_password_reset_email(user):
     db.session.commit()
     # In a real application, send an actual email here
     flash(f'Password reset link: {url_for("auth.reset_password", token=token, _external=True)}', 'info')
+
+# File upload helpers
+ALLOWED_AVATAR_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_avatar(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 # Routes
 @auth_bp.route('/admin/login', methods=['GET', 'POST'])
@@ -265,29 +273,73 @@ def logout():
 @login_required
 def profile():
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
+        name = request.form.get('name') or current_user.username
+        email = request.form.get('email') or current_user.email
+        phone = request.form.get('phone')
         address = request.form.get('address')
         lat = request.form.get('latitude')
         lng = request.form.get('longitude')
-        lat_float = None
-        lng_float = None
+        email_notifications = bool(request.form.get('email_notifications'))
 
-        try:
-            if lat and lng:
-                lat_float = float(lat)
-                lng_float = float(lng)
-            
-            if address and lat_float is not None and lng_float is not None:
-                current_user.update_location(lat_float, lng_float, address)
-            else:
-                current_user.address = address or None
-                current_user.location_lat = None
-                current_user.location_lng = None
-                
-            db.session.commit()
-            flash('Profile updated successfully!', 'success')
-        except ValueError:
-            flash('Invalid coordinates provided', 'error')
+        current_user.username = name
+        current_user.email = email
+        current_user.phone = phone
+        current_user.email_notifications = email_notifications
+
+        # Location update
+        if lat and lng:
+            try:
+                current_user.update_location(float(lat), float(lng), address)
+            except ValueError:
+                flash('Invalid coordinates provided', 'error')
+                return redirect(url_for('auth.profile'))
+        else:
+            current_user.address = address or None
+            current_user.location_lat = None
+            current_user.location_lng = None
+
+        # Avatar upload
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            if not allowed_avatar(avatar_file.filename):
+                flash('Invalid image format. Please upload JPG, PNG, or GIF.', 'error')
+                return redirect(url_for('auth.profile'))
+
+            filename = secure_filename(avatar_file.filename)
+            ext = filename.rsplit('.', 1)[1].lower()
+            avatar_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
+            os.makedirs(avatar_dir, exist_ok=True)
+
+            new_filename = f"avatar_{current_user.id}.{ext}"
+            avatar_path = os.path.join(avatar_dir, new_filename)
+
+            # Remove previous avatar if it exists
+            if current_user.avatar_url:
+                old_avatar_path = os.path.join(os.path.dirname(current_app.config['UPLOAD_FOLDER']), current_user.avatar_url)
+                if os.path.exists(old_avatar_path):
+                    try:
+                        os.remove(old_avatar_path)
+                    except OSError:
+                        pass
+
+            avatar_file.save(avatar_path)
+            current_user.avatar_url = f"images/avatars/{new_filename}"
+
+        # Password change (optional)
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        if new_password or confirm_password:
+            if not current_password or not current_user.check_password(current_password):
+                flash('Current password is incorrect.', 'error')
+                return redirect(url_for('auth.profile'))
+            if new_password != confirm_password:
+                flash('New passwords do not match.', 'error')
+                return redirect(url_for('auth.profile'))
+            current_user.set_password(new_password)
+
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
         
     return render_template('auth/profile.html')
