@@ -160,7 +160,22 @@ function addToCart(productId, productName) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            showSuccessMessage(`${productName} added to cart!`);
+            // Show success on the button for product details page
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check-circle"></i> Added to Cart!';
+            button.classList.add('btn-success');
+            button.classList.remove('btn-primary');
+            button.disabled = true;
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+                button.disabled = false;
+            }, 2000);
+            
             updateCartCount();
         } else {
             throw new Error(data.message || 'Error adding item to cart');

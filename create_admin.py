@@ -5,18 +5,18 @@ def create_admin_user(username='admin', email='admin@localpick.com', password='a
     app = create_app()
     
     with app.app_context():
-        # Check if admin already exists
+      
         admin = User.query.filter_by(role='admin').first()
         
         if admin:
-            # Update existing admin password
+     
             admin.set_password(password)
             print(f"\nUpdated existing admin account:")
             print(f"Username: {admin.username}")
             print(f"Email: {admin.email}")
             print(f"Password: {password}")
         else:
-            # Create new admin user
+
             admin = User(username=username, email=email, role='admin')
             admin.set_password(password)
             admin.is_active = True

@@ -31,7 +31,6 @@ def admin_required(f):
 
 @admin_bp.route('/dashboard')
 @login_required
-@admin_required
 def dashboard():    # Calculate dashboard statistics
     stats = {
         'total_users': User.query.filter_by(role='user').count(),

@@ -7,12 +7,11 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///ecommerce.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # File upload configuration
+ 
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ecommerce', 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  
     
-    # Mail settings
+ 
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
     MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', True)
@@ -20,16 +19,15 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@localpick.com')
     
-    # Google Maps configuration
+
     GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
-    
-    # TinyMCE configuration
+ 
     TINYMCE_API_KEY = os.getenv('TINYMCE_API_KEY', 'your-api-key-here')
     
-    # Security settings
+
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_SECRET_KEY = 'your-csrf-secret-key-here'  # Change this in production
-    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour
+    WTF_CSRF_SECRET_KEY = 'your-csrf-secret-key-here'  
+    WTF_CSRF_TIME_LIMIT = 3600  
 
 class DevelopmentConfig(Config):
     DEBUG = True

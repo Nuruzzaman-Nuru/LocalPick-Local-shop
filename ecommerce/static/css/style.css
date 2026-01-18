@@ -81,7 +81,7 @@ main {
 /* Navbar styling */
 .navbar {
     background: linear-gradient(to right, #1e1f32, #3a3f67);
-    padding: 0.8rem 0;
+    padding: 0.4rem 0;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
@@ -92,16 +92,16 @@ main {
 
 /* Offset page content for fixed navbar height */
 body {
-    padding-top: 76px;
+    padding-top: 56px;
 }
 
 .navbar .container {
-    padding: 0 1.5rem;
+    padding: 0 1rem;
 }
 
 .navbar-brand, .logo {
     color: #ffffff !important;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.5px;
     padding: 0;
@@ -110,9 +110,10 @@ body {
 .navbar .nav-link {
     color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 500;
-    padding: 0.5rem 1rem !important;
+    padding: 0.3rem 0.75rem !important;
     transition: all 0.3s ease;
     position: relative;
+    font-size: 0.95rem;
 }
 
 .navbar .nav-link:hover {
@@ -137,7 +138,7 @@ body {
 
 /* Role-specific navigation styles */
 .navbar .nav-item .nav-link i {
-    margin-right: 0.4rem;
+    margin-right: 0.25rem;
 }
 
 /* Admin specific styles */
@@ -592,15 +593,24 @@ body {
     border-radius: 10px;
 }
 
+
 .feature-column {
+    display: block !important;
+    visibility: visible !important;
     min-width: 260px;
-    max-width: 300px;
 }
 
 .feature-nav {
     border: 1px solid #e9eef5;
     border-radius: 14px;
     min-height: calc(100vh - 180px);
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    display: block !important;
+    visibility: visible !important;
+    background: white;
 }
 
 .feature-nav .list-group-item {
@@ -613,24 +623,6 @@ body {
 .feature-nav .list-group-item small {
     display: block;
     line-height: 1.25;
-}
-
-@media (max-width: 991.98px) {
-    .feature-nav {
-        position: sticky;
-        top: 80px;
-    }
-    .feature-column {
-        min-width: 100%;
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 991.98px) {
-    .feature-nav {
-        position: sticky;
-        top: 80px;
-    }
 }
 
 .admin-controls {
@@ -1619,9 +1611,200 @@ footer ul li a:hover {
     box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
 }
 
+/* Admin Sidebar Styles */
+.sidebar-header {
+    background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%) !important;
+    border-radius: 0 !important;
+}
+
+.sidebar-footer {
+    border-radius: 0 !important;
+}
+
+.icon-wrapper {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+}
+
+.list-group-item:hover .icon-wrapper {
+    transform: scale(1.1);
+}
+
+.transition-all {
+    transition: all 0.3s ease !important;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa !important;
+    border-left: 3px solid #4299e1;
+    padding-left: calc(1rem - 3px) !important;
+}
+
+.list-group-item:active {
+    background-color: #e7f1ff !important;
+}
+
+.list-group-item i.bi-chevron-right {
+    transition: transform 0.3s ease;
+}
+
+.list-group-item:hover i.bi-chevron-right {
+    transform: translateX(5px);
+}
+
+.text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.tiny {
+    font-size: 0.75rem;
+}
+
+.feature-nav {
+    border-radius: 12px !important;
+    overflow: hidden;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Admin Navigation Active State */
+.admin-nav-btn {
+    cursor: pointer;
+}
+
+.admin-nav-btn.active {
+    background-color: #e7f1ff !important;
+    border-left: 3px solid #4299e1 !important;
+    padding-left: calc(1rem - 3px) !important;
+    font-weight: 600;
+}
+
+.admin-nav-btn.active .icon-wrapper {
+    background-color: #4299e1 !important;
+}
+
+.admin-nav-btn.active .icon-wrapper i {
+    color: white !important;
+}
+
+.admin-nav-btn.active .fw-semibold {
+    color: #4299e1 !important;
+}
+
+/* Section Animation */
+.admin-section {
+    animation: fadeInSection 0.3s ease-in-out;
+}
+
+@keyframes fadeInSection {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
     padding: 3rem 1.5rem;
     color: #64748b;
 }
+
+/* Cart Success Badge on Product Card */
+.cart-success-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(40, 167, 69, 0.95);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    min-width: 200px;
+    text-align: center;
+    z-index: 10;
+    animation: badgeFadeIn 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.cart-success-badge i {
+    font-size: 2rem;
+}
+
+.cart-success-badge.show-success {
+    animation: badgePulse 2s ease;
+}
+
+@keyframes badgeFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes badgePulse {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    90% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+/* Add to Cart Success Button Style */
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+    animation: successPulse 0.4s ease;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.btn-success:disabled {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    opacity: 1;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+

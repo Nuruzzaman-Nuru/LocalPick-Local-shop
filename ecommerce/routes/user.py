@@ -7,10 +7,7 @@ from ..models.user import User
 from ..models.cart import CartItem, Cart
 from ..models.negotiation import Negotiation
 from ..utils.notifications import notify_customer_order_status, notify_admin_order_status
-# The AI utilities are optional. If the `ecommerce.utils.ai` package is missing
-# (for example in lightweight deployments), provide a safe fallback so the
-# app doesn't crash on import. The fallback implements a simple heuristic
-# that returns the same tuple (decision, counter_offer, message).
+
 try:
     from ..utils.ai.negotiation_bot import process_negotiation
 except Exception:
@@ -29,16 +26,13 @@ except Exception:
         price = getattr(product, 'price', None) if product is not None else None
         min_price = getattr(product, 'min_price', None) if product is not None else None
 
-        # If offered price meets or exceeds min_price (if set), accept.
         if offered is not None and min_price is not None and offered >= min_price:
             return 'accept', None, 'Accepted (fallback)'
 
-        # If offered price is very close to the listed price, accept.
         if offered is not None and price is not None and offered >= 0.9 * price:
             return 'accept', None, 'Accepted (fallback near price)'
 
-        # Otherwise suggest a counter offer: use min_price if available,
-        # otherwise propose 90% of the listed price when possible.
+       
         counter = None
         if min_price is not None:
             counter = min_price
@@ -48,7 +42,6 @@ except Exception:
         if counter is not None:
             return 'counter_offer', counter, 'Counter-offer suggested (fallback)'
 
-        # As a last resort, reject with a friendly message.
         return 'reject', None, 'AI not available — fallback rejected'
 from datetime import datetime
 from .. import db

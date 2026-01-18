@@ -111,7 +111,7 @@ A comprehensive e-commerce solution featuring role-based access control, smart p
      ```powershell
      $env:SECRET_KEY = "your-secret-key"
      $env:DATABASE_URL = "sqlite:///instance/ecommerce.db"
-     # $env:GOOGLE_MAPS_API_KEY = "your-google-maps-api-key"
+    
      ```
   5. Initialize the database/migrations (the repo contains a simple migrate script):
      ```powershell

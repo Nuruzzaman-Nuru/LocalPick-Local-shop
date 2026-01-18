@@ -480,6 +480,9 @@ content %}
             class="card-img-top"
             onerror="this.onerror=null; this.src='https://via.placeholder.com/400x400?text=' + encodeURIComponent('{{ product.name }}')"
           />
+          <div class="cart-success-badge" style="display: none;">
+            <i class="bi bi-check-circle"></i> Added to Cart!
+          </div>
           {% if product.stock > 0 %}
           <div class="product-tag">In Stock</div>
           {% endif %}
@@ -778,6 +781,11 @@ content %}
 
 <script>
   function addToCart(productId, productName) {
+    // Get the clicked button element
+    const clickedButton = event.currentTarget;
+    const productCard = clickedButton.closest('.product-card');
+    const badge = productCard ? productCard.querySelector('.cart-success-badge') : null;
+    
     fetch("/api/add", {
       method: "POST",
       headers: {
@@ -791,8 +799,23 @@ content %}
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
-          showSuccessMessage(`${productName} added to cart!`);
+          // Show success badge
+          if (badge) {
+            badge.style.display = 'flex';
+            badge.classList.add('show-success');
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+              badge.classList.remove('show-success');
+              badge.style.display = 'none';
+            }, 2000);
+          }
+          
+          // Update cart count
           updateCartCount();
+          
+          // Show success message
+          showSuccessMessage(productName + ' added to cart!');
         } else {
           throw new Error(data.message || "Error adding item to cart");
         }
